@@ -1,0 +1,28 @@
+MAKEFILE TARGETS
+
+IMPORTANT:
+Make sure you update the Makefile to compile your naming server and storage server correctly!
+Before running test, make sure you update the test/Config.java so that the test code could start your servers!
+
+To compile all Java files, execute
+        make
+
+To run all checkpoint test cases, run
+        make checkpoint
+      
+To run all test cases, run
+        make test
+
+To package source files into an archive, run
+        make archive
+
+To generate documentation, execute
+        make docs
+The documentation can then be viewed at javadoc/index.html. 
+Alternatively, complete documentation of all classes and members can be
+generated using
+        make docs-all
+and then viewed at javadoc-all/index.html.
+
+To clean the build directories, execute
+        make clean
