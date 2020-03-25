@@ -1,0 +1,86 @@
+diff --git a/test/naming/NamingTest.java b/test/naming/NamingTest.java
+index fbe0730..f07a7e9 100644
+--- a/test/naming/NamingTest.java
++++ b/test/naming/NamingTest.java
+@@ -43,6 +43,7 @@ abstract class NamingTest extends Test
+ 
+         HttpResponse<String> response;
+         HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:" + port + method))
++                .setHeader("Content-Type", "application/json")
+                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestObj)))
+                 .build();
+ 
+@@ -116,7 +117,7 @@ abstract class NamingTest extends Test
+     {
+         if(server != null)
+         {
+-            server.destroy();
++            kill(server.toHandle());
+ 
+             // Wait for the naming server to stop.
+             try
+@@ -129,4 +130,9 @@ abstract class NamingTest extends Test
+         }
+     }
+ 
++    protected void kill(ProcessHandle handle)
++    {
++        handle.descendants().forEach(this::kill);
++        handle.destroy();
++    }
+ }
+diff --git a/test/naming/TestStorageServer.java b/test/naming/TestStorageServer.java
+index 240c010..bf55e5a 100644
+--- a/test/naming/TestStorageServer.java
++++ b/test/naming/TestStorageServer.java
+@@ -106,6 +106,7 @@ public class TestStorageServer
+ 
+         HttpRequest request = HttpRequest.newBuilder()
+                 .uri(URI.create("http://127.0.0.1:" + naming_register_port + "/register"))
++                .setHeader("Content-Type", "application/json")
+                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(registerRequest)))
+                 .build();
+ 
+diff --git a/test/storage/ReplicationTest.java b/test/storage/ReplicationTest.java
+index 9f98d57..a36d2be 100644
+--- a/test/storage/ReplicationTest.java
++++ b/test/storage/ReplicationTest.java
+@@ -454,7 +454,7 @@ public class ReplicationTest extends StorageTest
+         super.clean();
+         
+         if (second_server != null) {
+-            second_server.destroy();
++            kill(second_server.toHandle());
+             // Wait for the naming server to stop.
+             try {
+                 second_server.waitFor();
+diff --git a/test/storage/StorageTest.java b/test/storage/StorageTest.java
+index be8963c..96d9baf 100644
+--- a/test/storage/StorageTest.java
++++ b/test/storage/StorageTest.java
+@@ -176,7 +176,7 @@ abstract class StorageTest extends Test
+     protected void clean()
+     {
+         if (server != null) {
+-            server.destroy();
++            kill(server.toHandle());
+             // Wait for the storage server to stop.
+             try {
+                 server.waitFor();
+@@ -201,10 +201,16 @@ abstract class StorageTest extends Test
+ 
+         HttpResponse<String> response;
+         HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:" + port + method))
++                .setHeader("Content-Type", "application/json")
+                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestObj)))
+                 .build();
+ 
+         response = client.send(request, HttpResponse.BodyHandlers.ofString());
+         return response;
+     }
++
++    protected void kill(ProcessHandle handle) {
++        handle.descendants().forEach(this::kill);
++        handle.destroy();
++    }
+ }

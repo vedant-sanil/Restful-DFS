@@ -1,0 +1,60 @@
+diff --git a/test/naming/NamingTest.java b/test/naming/NamingTest.java
+index f07a7e9..fd53325 100644
+--- a/test/naming/NamingTest.java
++++ b/test/naming/NamingTest.java
+@@ -31,7 +31,6 @@ abstract class NamingTest extends Test
+     /** Naming server under test. */
+     private Process                       server = null;
+ 
+-    protected HttpClient                  client;
+     protected Gson                        gson;
+ 
+     public static final int               SERVICE_PORT = 8080;
+@@ -47,7 +46,7 @@ abstract class NamingTest extends Test
+                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestObj)))
+                 .build();
+ 
+-        response = client.send(request, HttpResponse.BodyHandlers.ofString());
++        response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+         return response;
+     }
+ 
+@@ -77,8 +76,6 @@ abstract class NamingTest extends Test
+             throw new TestFailed("unable to start naming server");
+         }
+ 
+-        client = HttpClient.newHttpClient();
+-
+         // Attempt to make the connection.
+         while (true)
+         {
+diff --git a/test/storage/StorageTest.java b/test/storage/StorageTest.java
+index 96d9baf..fa1e760 100644
+--- a/test/storage/StorageTest.java
++++ b/test/storage/StorageTest.java
+@@ -29,7 +29,6 @@ abstract class StorageTest extends Test
+ {
+     /** Storage server being tested. */
+     private Process                 server = null;
+-    protected HttpClient            client;
+     public static final int         CLIENT_PORT = 7000;
+     public static final int         COMMAND_PORT = 7001;
+ 
+@@ -123,8 +122,6 @@ abstract class StorageTest extends Test
+                 " Please change the port number in Config.java!");
+         }
+ 
+-        this.client = HttpClient.newHttpClient();
+-        
+         // start a storage server according to the command line specified in Config.java
+         if (CLIENT_PORT != Integer.parseInt(splits[splits.length - 4])) {
+             throw new TestFailed("StorgeServer0 Storage Port should be " + CLIENT_PORT + " not " + splits[splits.length - 4] +
+@@ -205,7 +202,7 @@ abstract class StorageTest extends Test
+                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestObj)))
+                 .build();
+ 
+-        response = client.send(request, HttpResponse.BodyHandlers.ofString());
++        response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+         return response;
+     }
+ 
