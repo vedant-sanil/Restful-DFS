@@ -30,6 +30,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             response.write(b'\n')
             self.wfile.write(response.getvalue())
     
+<<<<<<< HEAD
     def storage_create(self, d):
         print("=====================================")
         response = {}
@@ -60,6 +61,8 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(bytes(response_json,"utf-8"))
         print("=====================================")
 
+=======
+>>>>>>> 4b44455eb21c34d57792a4908c4ffc272256c2b9
     def storage_size(self, d):
         print("=====================================")
         response = {}
@@ -75,7 +78,11 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(bytes(response_json,"utf-8"))
         except FileNotFoundError: 
             response["exception_type"] = "FileNotFoundException"
+<<<<<<< HEAD
             response["exception_info"] = "FileNotFoundException: "+d["path"]+" cannot be found."
+=======
+            response["exception_info"] = "FileNotFoundException: File/path cannot be found."
+>>>>>>> 4b44455eb21c34d57792a4908c4ffc272256c2b9
             response_json = json.dumps(response)
             print(response_json)
             self.send_response(404)
@@ -83,7 +90,11 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(bytes(response_json,"utf-8"))
         except ValueError:
             response["exception_type"] = "IllegalArgumentException"
+<<<<<<< HEAD
             response["exception_info"] = "IllegalArgumentException: "+d["path"]+" is invalid."
+=======
+            response["exception_info"] = "IllegalArgumentException. If the path is invalid."
+>>>>>>> 4b44455eb21c34d57792a4908c4ffc272256c2b9
             response_json = json.dumps(response)
             self.send_response(404)
             self.end_headers()
