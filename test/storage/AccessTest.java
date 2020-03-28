@@ -81,9 +81,9 @@ public class AccessTest extends StorageTest
     protected void perform() throws TestFailed
     {
         testSize();
-//        testReadBasic();
-//        testWriteBasic();
-//        testReadWrite();
+        testReadBasic();
+        testWriteBasic();
+        testReadWrite();
 //        testReadWriteBounds();
 //        testAppend();
     }
@@ -97,6 +97,7 @@ public class AccessTest extends StorageTest
         WriteRequest writeRequest = null;
         HttpResponse<String> response = null;
         String base64String = Base64.getEncoder().encodeToString(write_data);
+        System.out.println("Base64String is "+base64String);
         // Write test data to file. Check that the data is present in the file
         // by accessing it directly in the server's temporary directory, and by
         // asking the server to retrieve the data. Check also that the file size
@@ -127,6 +128,8 @@ public class AccessTest extends StorageTest
         if(direct_access.isDirectory())
             throw new TestFailed("file is a directory after writing");
 
+        System.out.println("Direct Access Length - "+ direct_access.length());
+        System.out.println("write_data Length - "+ write_data.length);
         if(direct_access.length() != write_data.length)
             throw new TestFailed("file has incorrect size after writing");
 
