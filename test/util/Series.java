@@ -240,18 +240,18 @@ public class Series implements Serializable
     private TestReport run(Class<? extends Test> test_class,
                            Timer timeout_timer, int timeout)
     {
+        System.out.println("SERIES - Enters Run");
         // Create a TestState object for the test. This object is necessary
         // because test-related state exists before the test object itself is
         // even constructed.
         TestState       state = new TestState();
-
         // Create the main testing thread and start it.
         new Thread(new TestThread(test_class, state)).start();
 
         // Schedule the test timeout task.
         TimerTask       test_timeout = new TestTimeoutTask(state);
         timeout_timer.schedule(test_timeout, (long)timeout * 1000);
-
+        System.out.println("SERIES - Starts the Timeout Task");
         // Wait until the test is stopped (success or failure is called by the
         // test, or timeout occurs).
         synchronized(state)
@@ -267,7 +267,11 @@ public class Series implements Serializable
                 }
             }
         }
-
+        System.out.println(state.initialize_stopped);
+        System.out.println(state.cause);
+        System.out.println(state.cleanup_stopped);
+        System.out.println(state.cleanup_stop_cause);
+        System.out.println("SERIES - Test has stopped");
         // Cancel the timeout task if it has not yet run.
         test_timeout.cancel();
 
@@ -307,7 +311,11 @@ public class Series implements Serializable
                 catch(InterruptedException e) { }
             }
         }
-
+        System.out.println(state.initialize_stopped);
+        System.out.println(state.cause);
+        System.out.println(state.cleanup_stopped);
+        System.out.println(state.cleanup_stop_cause);
+        System.out.println("SERIES - Cleanup has stopped");
         // Cancel the cleanup timeout task if it has not yet run.
         cleanup_timeout.cancel();
 
@@ -494,6 +502,8 @@ public class Series implements Serializable
             try
             {
                 constructor = test_class.getConstructor();
+                System.out.println("SERIES - Run method: Constructor");
+                System.out.println(constructor);
             }
             catch(NoSuchMethodException e)
             {
@@ -518,6 +528,9 @@ public class Series implements Serializable
             try
             {
                 test = constructor.newInstance();
+                System.out.println("SERIES - Run method: Test Object");
+                System.out.println(test);
+                System.out.println(state.stopped);
             }
             catch(InvocationTargetException e)
             {
@@ -565,10 +578,15 @@ public class Series implements Serializable
             // Initialize the test.
             try
             {
+                System.out.println("SERIES - Initialization Started");
+                System.out.println(test.state);
+                System.out.println(state.test);
+                System.out.println("================================");
                 test.initialize();
             }
             catch(Throwable t)
             {
+                System.out.println("Initialization Failed");
                 state.stop(t);
             }
             finally
@@ -578,14 +596,15 @@ public class Series implements Serializable
                 // and wake up the cleaning thread, if there is one.
                 synchronized(state)
                 {
+                    System.out.println("Initialize Stopped "+state.initialize_stopped);
                     state.initialize_stopped = true;
                     state.notifyAll();
                 }
             }
-
             // If the test has been stopped, do not call perform.
             synchronized(state)
             {
+                System.out.println("SERIES - Run/Method: Initialize Stopped "+state.initialize_stopped);
                 if(state.stopped)
                     return;
             }
@@ -593,6 +612,7 @@ public class Series implements Serializable
             // Call perform.
             try
             {
+                System.out.println("SERIES - Calling Test.perform()");
                 test.perform();
             }
             catch(Throwable t)

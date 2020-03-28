@@ -81,11 +81,11 @@ public class AccessTest extends StorageTest
     protected void perform() throws TestFailed
     {
         testSize();
-        testReadBasic();
-        testWriteBasic();
-        testReadWrite();
-        testReadWriteBounds();
-        testAppend();
+//        testReadBasic();
+//        testWriteBasic();
+//        testReadWrite();
+//        testReadWriteBounds();
+//        testAppend();
     }
 
     /** Tests the <code>write</code> method with valid arguments.
