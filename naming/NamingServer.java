@@ -55,7 +55,7 @@ public class NamingServer
     /**
      Create the naming server
      */
-    public NamingServer(int REGISTRATION_PORT, int SERVICE_PORT) throws IOException {
+    public NamingServer(int SERVICE_PORT, int REGISTRATION_PORT) throws IOException {
         this.REGISTRATION_PORT = REGISTRATION_PORT;
         this.SERVICE_PORT = SERVICE_PORT;
 
@@ -148,9 +148,55 @@ public class NamingServer
     }
 
     private void add_service_api() {
-
+        this.isValidPath();
     }
 
+    public void isValidPath()
+    {
+        this.service_skeleton.createContext("/is_valid_path", (exchange ->
+        {
+            HashMap<String, Object> respText = new HashMap<String, Object>();
+            String jsonString = "";
+            int returnCode = 200;
+            if ("POST".equals(exchange.getRequestMethod())) {
+                RegisterRequest registerRequest = null;
+                try {
+                    InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+                    Map<String, String> map = new HashMap<String, String>();
+                    map = (Map<String, String>) gson.fromJson(isr, map.getClass());
+                    System.out.println(map);
+                    String filepath = map.get("path");
+                    System.out.println(filepath + " - This is the filepath");
+                    if (filepath.equals("") || !filepath.startsWith("/") || !filepath.contains(":")) {
+                        System.out.println("Illegal Argument");
+                        returnCode = 200;
+                        respText.put("success", "false");
+                        jsonString = gson.toJson(respText);
+                        System.out.println("---");
+                        System.out.println(jsonString);
+                        this.generateResponseAndClose(exchange, jsonString, returnCode);
+                        return;
+                    } else {
+                        respText.put("success", "true");
+                        jsonString = gson.toJson(respText);
+                        System.out.println("---");
+                        System.out.println(jsonString);
+                        this.generateResponseAndClose(exchange, jsonString, returnCode);
+                        return;
+                    }
+                } catch (Exception e) {
+                    jsonString = "Error during parse JSON object!\n";
+                    returnCode = 400;
+                    this.generateResponseAndClose(exchange, jsonString, returnCode);
+                    return;
+                }
+            } else {
+                jsonString = "The REST method should be POST for <register>!\n";
+                returnCode = 400;
+            }
+            this.generateResponseAndClose(exchange, jsonString, returnCode);
+        }));
+    }
 
     public static void main(String[] args) throws FileNotFoundException, IOException, TestFailed
     {
