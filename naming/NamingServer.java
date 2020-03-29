@@ -1,4 +1,4 @@
-package test.storage;
+package naming;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -6,8 +6,10 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
-
+import java.util.*;
 import jsonhelper.*;
+import java.io.*;
+import java.util.Random;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpExchange;
@@ -17,7 +19,6 @@ import test.util.TestFailed;
 import test.util.TestUtil;
 
 /** Test naming server.
-
  <p>
  This naming server performs the following checks each time a storage server
  registers:
@@ -32,10 +33,12 @@ public class NamingServer
     /** List of paths to command the next storage server to register to
      delete. */
     private Path[] delete_files = null;
+
     /** Naming server IP address. */
     public final static String NAMING_IP = "127.0.0.1";
     public int REGISTRATION_PORT;
-    public int SERVICE_PORT ;
+    public int SERVICE_PORT;
+
     /** Naming server registration interface skeleton. */
     private HttpServer registration_skeleton;
     /** Naming server service interface skeleton. */
@@ -50,9 +53,9 @@ public class NamingServer
     protected Gson gson;
 
     /**
-    Create the naming server
+     Create the naming server
      */
-    NamingServer(int REGISTRATION_PORT, int SERVICE_PORT) throws IOException{
+    public NamingServer(int REGISTRATION_PORT, int SERVICE_PORT) throws IOException {
         this.REGISTRATION_PORT = REGISTRATION_PORT;
         this.SERVICE_PORT = SERVICE_PORT;
 
@@ -70,7 +73,6 @@ public class NamingServer
 
     /** Sets the files the next storage server to connect is expected to
      register.
-
      @param files The files to expect. The naming server will check that
      these are indeed the files that are received. If this
      argument is <code>null</code>, the naming server will not
@@ -83,7 +85,6 @@ public class NamingServer
 
     /** Sets the files the next storage server to connect will be commanded to
      delete.
-
      @param files The files to be deleted. If this argument is
      <code>null</code>, the naming server will not command the storage server
      to delete any files.
@@ -107,7 +108,6 @@ public class NamingServer
     }
 
     /** Retrieves a registration stub for the test server.
-
      @return The stub.
      @throws TestFailed If a stub cannot be obtained.
      */
@@ -117,7 +117,6 @@ public class NamingServer
     }
 
     /** Starts the test naming server.
-
      @throws TestFailed If the test cannot be started.
      */
     void start() throws TestFailed
@@ -152,8 +151,58 @@ public class NamingServer
 
     }
 
-    private void register() {
 
+    public static void main(String[] args) throws FileNotFoundException, IOException, TestFailed
+    {
+        Random rand = new Random();
+        File file = new File("./NamingServer" + rand.nextInt() + ".output");
+        PrintStream stream = new PrintStream(file);
+        System.setOut(stream);
+        System.setErr(stream);
+        System.out.println("MAIN METHOD CALLED");
+        NamingServer n = new NamingServer(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
+        n.start();
+    }
+
+
+    private void register() {
+        this.registration_skeleton.createContext("/register", (exchange -> {
+            HashMap<String, Object> respText = new HashMap<String, Object>();
+            String jsonString = "";
+            int returnCode = 200;
+            if ("POST".equals(exchange.getRequestMethod())) {
+                RegisterRequest registerRequest = null;
+                try {
+                    try {
+                        InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+                        registerRequest = gson.fromJson(isr, RegisterRequest.class);
+                    } catch (Exception e) {
+                        jsonString = "Error during parse JSON object!\n";
+                        returnCode = 400;
+                        this.generateResponseAndClose(exchange, jsonString, returnCode);
+                        return;
+                    }
+                    System.out.println("Register Request is " + registerRequest.toString());
+//                    System.out.println("storage_ip is " + registerRequest.storage_ip);
+//                    System.out.println("client_port is " + registerRequest.client_port;
+//                    System.out.println("command_port is " + registerRequest.command_port);
+//                    System.out.println("files is " + registerRequest.files);
+                } catch (Exception e) {
+                    System.out.println("Illegal State");
+                    returnCode = 404;
+                    respText.put("exception_type", "IllegalStateException");
+                    respText.put("exception_info", "This storage client already registered.");
+                }
+                respText.put("files", registerRequest.files);
+                jsonString = gson.toJson(respText);
+                returnCode = 200;
+                System.out.println(respText);
+            } else {
+                jsonString = "The REST method should be POST for <register>!\n";
+                returnCode = 400;
+            }
+            this.generateResponseAndClose(exchange, jsonString, returnCode);
+        }));
     }
 
     /**
