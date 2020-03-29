@@ -44,7 +44,7 @@ public class RegistrationTest extends StorageTest
         @throws TestFailed If the test fails.
      */
     @Override
-    protected void perform() throws TestFailed
+    protected void perform() throws TestFailed, InterruptedException
     {
         System.out.println("REGISTRATIONTEST - Starting Perform");
         // The registration server has already checked that the storage server
@@ -68,6 +68,7 @@ public class RegistrationTest extends StorageTest
                                  e);
         }
 
+        Thread.sleep(500);
         if(!TestUtil.sameElements(listed, remaining_files))
         {
             System.out.println("REGISTRATIONTEST - Did not remove correct files after registration");

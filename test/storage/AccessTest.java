@@ -84,8 +84,8 @@ public class AccessTest extends StorageTest
         testReadBasic();
         testWriteBasic();
         testReadWrite();
-//        testReadWriteBounds();
-//        testAppend();
+        testReadWriteBounds();
+        testAppend();
     }
 
     /** Tests the <code>write</code> method with valid arguments.
@@ -363,6 +363,7 @@ public class AccessTest extends StorageTest
         try
         {
             String base64String = Base64.getEncoder().encodeToString(write_data);
+            System.out.println("TESTAPPEND - String to be written "+base64String);
             WriteRequest writeRequest = new WriteRequest(read_write_file.toString(), write_data.length + 1, base64String);
             response = getResponse("/storage_write", this.client_stub.server_port, writeRequest);
             boolean success = gson.fromJson(response.body(), BooleanReturn.class).success;
@@ -390,6 +391,8 @@ public class AccessTest extends StorageTest
                                  "appending", t);
         }
 
+        System.out.println(write_data.length+write_data.length+1);
+        System.out.println(size);
         if(size != write_data.length + 1 + write_data.length)
             throw new TestFailed("file has incorrect size after appending");
     }
