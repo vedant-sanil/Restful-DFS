@@ -26,7 +26,7 @@ public class ConformanceTests
 //                        test.naming.ReplicationTest.class,
 //                        test.naming.DeletionTest.class,
                         test.storage.RegistrationTest.class,
-//                        test.storage.AccessTest.class,
+                        test.storage.AccessTest.class,
 //                        test.storage.DirectoryTest.class,
 //                        test.storage.ReplicationTest.class
                 };

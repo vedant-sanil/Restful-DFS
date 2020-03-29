@@ -73,7 +73,7 @@ public class DirectoryTest extends StorageTest
     protected void perform() throws TestFailed
     {
         testCreate();
-//        testDelete();
+        testDelete();
     }
 
     /** Tests the create method
@@ -269,6 +269,7 @@ public class DirectoryTest extends StorageTest
         try
         {
             pathRequest = new PathRequest("/");
+            System.out.println(pathRequest);
             response = getResponse("/storage_delete", this.command_stub.server_port, pathRequest);
             boolean success = gson.fromJson(response.body(), BooleanReturn.class).success;
             if(success)

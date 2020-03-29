@@ -26,6 +26,7 @@ import static java.lang.Math.toIntExact;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 
 
 /** Base class of storage servers.
@@ -199,7 +200,7 @@ public class StorageServer
     private void add_command_api() throws TestFailed
     {
         this.create();
-//        this.delete();
+        this.delete();
 //        this.copy();
     }
 
@@ -478,7 +479,7 @@ public class StorageServer
 //                        Base64.getEncoder().decode(data.getBytes());
 //                        RandomAccessFile seek = new RandomAccessFile(path, "rw");
 //                    Paths p = Paths.get(path);
-                    RandomAccessFile aFile     = new RandomAccessFile(path, "rw");
+                    RandomAccessFile aFile = new RandomAccessFile(path, "rw");
 //                    FileChannel fchannel = FileChannel.open(p);
 //                    FileChannel fchannel = ostream.getChannel();
                     FileChannel fchannel = aFile.getChannel();
@@ -497,6 +498,7 @@ public class StorageServer
                     System.out.println(' ');
                     System.out.println(respText);
                     ostream.close();
+                    fchannel.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                     System.out.println("Illegal Argument");
@@ -547,7 +549,11 @@ public class StorageServer
                         return;
                     }
                     String path = root_dir + filepath;
-                    boolean flag = new File(path).mkdirs();
+                    File temp = new File(path);
+                    String dir = temp.getParent();
+                    String fil = temp.getName();
+                    boolean flagdir = new File(dir).mkdirs();
+                    boolean flag = new File(path).createNewFile();
                     if (flag)
                         respText.put("success", "true");
                     else
@@ -571,6 +577,92 @@ public class StorageServer
         }));
     }
 
+
+    public boolean deleteDir(File file) {
+        File[] contents = file.listFiles();
+        if (contents != null) {
+            for (File f : contents) {
+                if (! Files.isSymbolicLink(f.toPath())) {
+                    deleteDir(f);
+                }
+            }
+        }
+        return file.delete();
+    }
+
+    /** Throws <code>UnsupportedOperationException</code>. */
+    public void delete()
+    {
+        this.command_skeleton.createContext("/storage_delete", (exchange ->
+        {
+            System.out.println("Coming into storage_delete Context");
+            HashMap<String, String> respText = new HashMap<String, String>();
+            String jsonString = "";
+            int returnCode = 200;
+            if ("POST".equals(exchange.getRequestMethod())) {
+                // parse request json
+                try
+                {
+                    System.out.println("Coming into POST portion");
+                    InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+                    Map<String, Object> map = new HashMap<String, Object>();
+                    map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
+                    System.out.println(map);
+                    String filepath = (String) map.get("path");
+                    System.out.println((root_dir+filepath) + " - This is the filepath");
+                    if (filepath.equals("") || filepath == null || filepath.equals("null") || filepath.equals(root_dir) || filepath.equals("/")) {
+                        System.out.println("Illegal Argument");
+                        returnCode = 404;
+                        respText.put("exception_type", "IllegalArgumentException");
+                        respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
+                        jsonString = gson.toJson(respText);
+                        System.out.println("---");
+                        System.out.println(jsonString);
+                        this.generateResponseAndClose(exchange, jsonString, returnCode);
+                        return;
+                    }
+                    File delete_files = new File(root_dir + filepath);
+                    boolean flag;
+                    if (delete_files.isDirectory())
+                    {
+                        flag = deleteDir(delete_files);
+                    } else {
+                        System.out.println(delete_files);
+                        flag = delete_files.delete();
+                        System.out.println(flag);
+                        String dir = delete_files.getParent();
+                        File dirfile = new File(dir);
+                        while (dirfile.list().length == 0)
+                        {
+                            System.out.println(dirfile);
+                            flag = dirfile.delete();
+                            System.out.println(flag);
+                            String d = dirfile.getParent();
+                            dirfile = new File(d);
+                        }
+                    }
+                    if (flag)
+                        respText.put("success", "true");
+                    else
+                        respText.put("success", "false");
+                    System.out.println(respText);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("Illegal Argument");
+                    returnCode = 404;
+                    respText.put("exception_type", "IllegalArgumentException");
+                    respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
+                }
+                returnCode = 200;
+                jsonString = gson.toJson(respText);
+                System.out.println("---");
+                System.out.println(jsonString);
+            } else {
+                returnCode = 404;
+            }
+            this.generateResponseAndClose(exchange, jsonString, returnCode);
+        }));
+    }
 
     /**
      * call this function when you want to write to response and close the connection.
