@@ -1,0 +1,14 @@
+MAIN METHOD CALLED
+8090
+8080
+Register Request is [Ljava.lang.String;@24a9b88e
+/file
+/directory/file
+/directory/another_file
+/another_directory/file
+{files=[Ljava.lang.String;@24a9b88e}
+Register Request is [Ljava.lang.String;@3a6da83d
+/file
+/directory/file
+/another_directory/another_file
+{files=[Ljava.lang.String;@3a6da83d}

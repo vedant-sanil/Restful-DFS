@@ -1,0 +1,2 @@
+rm NamingServer*
+make checkpoint
