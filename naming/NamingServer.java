@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.*;
 import jsonhelper.*;
 import java.io.*;
+import storage.StorageServerInfo;
 import java.util.Random;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpServer;
@@ -52,6 +53,9 @@ public class NamingServer
     /** Gson object which can parse json to an object. */
     protected Gson gson;
 
+    /** Maintain a list of all registered servers*/
+    private ArrayList<StorageServerInfo> regServers;
+
     /**
      Create the naming server
      */
@@ -66,6 +70,7 @@ public class NamingServer
         service_skeleton.setExecutor(Executors.newCachedThreadPool());
 
         this.gson = new Gson();
+        this.regServers = new ArrayList<StorageServerInfo>();
 
         System.out.println(REGISTRATION_PORT);
         System.out.println(SERVICE_PORT);
@@ -229,16 +234,43 @@ public class NamingServer
                         return;
                     }
                     System.out.println("Register Request is " + registerRequest.toString());
-//                    System.out.println("storage_ip is " + registerRequest.storage_ip);
-//                    System.out.println("client_port is " + registerRequest.client_port;
-//                    System.out.println("command_port is " + registerRequest.command_port);
-//                    System.out.println("files is " + registerRequest.files);
+                    String storage_ip = registerRequest.storage_ip;
+                    int client_port = registerRequest.client_port;
+                    int command_port = registerRequest.command_port;
+
+                    /**
+                    Raise exception here if duplicate servers exist
+                     */
+                    if (this.regServers.size() == 0) {
+                        this.regServers.add(new StorageServerInfo(storage_ip, client_port, command_port));
+                    } else {
+                        ArrayList<StorageServerInfo> currServers = this.regServers;
+                        for (StorageServerInfo serverInfo : currServers) {
+                            if (serverInfo.verifySameServer(storage_ip, command_port)) {
+                                // Server already has been registered, throw exception
+                                throw new java.lang.IllegalStateException("Illegal State");
+                            } else {
+                                this.regServers.add(new StorageServerInfo(storage_ip, client_port, command_port));
+                            }
+                        }
+                    }
                 } catch (Exception e) {
-                    System.out.println("Illegal State");
-                    returnCode = 404;
-                    respText.put("exception_type", "IllegalStateException");
-                    respText.put("exception_info", "This storage client already registered.");
+                    returnCode = 409;
+                    String exception_type = "IllegalStateException";
+                    String exception_info = "This storage client already registered.";
+                    ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                    this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                    return;
                 }
+
+                // Loop over list of files obtained from server
+                for (String filename : registerRequest.files) {
+                    Path filePath = new Path(filename);
+                    System.out.println("Name of file: " + filePath);
+
+                    // Add new files to tree directory
+                }
+
                 respText.put("files", registerRequest.files);
                 jsonString = gson.toJson(respText);
                 returnCode = 200;

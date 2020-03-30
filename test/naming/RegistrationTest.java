@@ -66,7 +66,6 @@ public class RegistrationTest extends NamingTest
         {
             badServer.testDuplicateRegistration();
         }
-
         testMerging();
     }
 
@@ -290,6 +289,8 @@ public class RegistrationTest extends NamingTest
             try
             {
                 response = register(gson, REGISTRATION_PORT, new String[0]);
+
+                System.out.println(response.body());
 
                 String exception_type = gson.fromJson(response.body(), ExceptionReturn.class).exception_type;
 

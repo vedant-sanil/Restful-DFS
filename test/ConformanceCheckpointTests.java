@@ -16,7 +16,7 @@ public class ConformanceCheckpointTests
         @SuppressWarnings("unchecked")
         Class<? extends Test>[]     tests =
                 new Class[] {
-//                        test.naming.PathTest.class,
+                        test.naming.PathTest.class,
                         test.naming.RegistrationTest.class,
 //                        test.naming.ListingTest.class,
 //                        test.naming.CreationTest.class,
