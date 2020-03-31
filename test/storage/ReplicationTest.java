@@ -45,7 +45,7 @@ public class ReplicationTest extends StorageTest
     public static final String  notice =
         "checking storage server replication process";
     /** Prerequisites. */
-//    public static final Class[] prerequisites = new Class[] {AccessTest.class};
+    public static final Class[] prerequisites = new Class[] {AccessTest.class};
 
     public static final int     SECOND_CLIENT_PORT = 7010;
     public static final int     SECOND_COMMAND_PORT = 7011;
@@ -98,9 +98,6 @@ public class ReplicationTest extends StorageTest
         try
         {
             WriteRequest writeRequest = new WriteRequest(create_path.toString(), 0, base64String);
-            System.out.println("=============WRITE=============");
-            System.out.println(base64String);
-            System.out.println("=============WRITE FINISHED=============");
             response = getResponse("/storage_write", this.second_stub.server_port, writeRequest);
             boolean success = gson.fromJson(response.body(), BooleanReturn.class).success;
             if (!success) {
@@ -147,7 +144,6 @@ public class ReplicationTest extends StorageTest
             throw new TestFailed("unable to retrieve size of created file", t);
         }
 
-        System.out.println("Resulting Size: "+resulting_size+" Data.length: "+data.length);
         if(resulting_size != (long)data.length)
             throw new TestFailed("created file has incorrect size");
 

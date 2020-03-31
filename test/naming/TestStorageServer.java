@@ -8,9 +8,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.concurrent.Executors;
-import java.io.*;
-import java.util.*;
-import java.io.PrintStream;
+
 import jsonhelper.*;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpServer;
@@ -149,7 +147,7 @@ public class TestStorageServer
                            correct set of duplicate files.
      */
     public synchronized ServerInfo start(int naming_register_port, Path[] offer_files,
-                                         Path[] expect_files) throws TestFailed, FileNotFoundException
+                                         Path[] expect_files) throws TestFailed
     {
         // Start storage server skeletons.
         startSkeletons();
@@ -160,18 +158,11 @@ public class TestStorageServer
         {
             files[i] = offer_files[i].toString();
         }
-        Random rand = new Random();
-        File file = new File("./StorageServerSample" + rand.nextInt() + ".output");
-        PrintStream stream = new PrintStream(file);
-        System.setOut(stream);
-        System.setErr(stream);
-        System.out.println("MAIN METHOD CALLED");
-        System.out.println(files.length);
-        System.out.println(files);
+
         // Register the storage server with the naming server.
         HttpResponse<String> response = register(gson, naming_register_port, files);
         files = gson.fromJson(response.body(), FilesReturn.class).files;
-
+        //System.out.println(files.length);
         Path[] delete_files = new Path[files.length];
         for(int i = 0; i < files.length; i++)
         {

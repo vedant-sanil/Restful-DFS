@@ -16,15 +16,14 @@ public class ConformanceCheckpointTests
         @SuppressWarnings("unchecked")
         Class<? extends Test>[]     tests =
                 new Class[] {
-                        test.storage.RegistrationTest.class,
-                        test.storage.AccessTest.class,
-                        test.storage.DirectoryTest.class,
                         test.naming.PathTest.class,
                         test.naming.RegistrationTest.class,
-                        test.naming.ListingTest.class,
-                        test.naming.CreationTest.class,
-                        test.naming.StubRetrievalTest.class,
-
+//                        test.naming.ListingTest.class,
+//                        test.naming.CreationTest.class,
+//                        test.naming.StubRetrievalTest.class,
+//                        test.storage.RegistrationTest.class,
+//                        test.storage.AccessTest.class,
+//                        test.storage.DirectoryTest.class,
                 };
         Series series = new Series(tests);
         SeriesReport report = series.run(5, System.out);

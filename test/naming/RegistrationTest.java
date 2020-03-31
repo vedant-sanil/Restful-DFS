@@ -29,8 +29,8 @@ public class RegistrationTest extends NamingTest
     public static final String  notice =
         "checking naming server registration interface";
     /** Prerequisites. */
-//    public static final Class[] prerequisites =
-//        new Class[] {PathTest.class};
+    public static final Class[] prerequisites =
+        new Class[] {PathTest.class};
 
     /** First storage server to register. */
     private TestStorageServer server1;
@@ -66,7 +66,6 @@ public class RegistrationTest extends NamingTest
         {
             badServer.testDuplicateRegistration();
         }
-
         testMerging();
     }
 
@@ -132,9 +131,6 @@ public class RegistrationTest extends NamingTest
         // Register the third storage server with a file that shadows a
         // directory on the naming server. The naming server should command this
         // file to be deleted.
-        System.out.println("Line 134 - Register the third storage server with a file that shadows a" +
-                " directory on the naming server. The naming server should command this" +
-                " file to be deleted.");
         Path[]      server3_files =
             new Path[] {new Path("/directory"),
                         new Path("/another_file")};
@@ -162,8 +158,6 @@ public class RegistrationTest extends NamingTest
 
         // Register the fourth storage server with the root directory among its
         // list of files. The naming server should silently ignore this attempt.
-        System.out.println("Line 164 - Register the fourth storage server with the root directory among its" +
-                " list of files. The naming server should silently ignore this attempt.");
         Path[]      server4_files = new Path[] {new Path("/")};
         Path[]      server4_delete_files = new Path[0];
 
