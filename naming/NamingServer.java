@@ -56,6 +56,10 @@ public class NamingServer
     /** Maintain a list of all registered servers*/
     private ArrayList<StorageServerInfo> regServers;
 
+    /** Directory of all files */
+    private NamingDirectory directree;
+    private DirectoryNode rootdir;
+
     /**
      Create the naming server
      */
@@ -71,6 +75,11 @@ public class NamingServer
 
         this.gson = new Gson();
         this.regServers = new ArrayList<StorageServerInfo>();
+
+        // Add root node to directory
+        String[] initList = new String[] {"root"};
+        this.directree = new NamingDirectory(initList);
+        this.rootdir = directree.getRoot();
 
         System.out.println(REGISTRATION_PORT);
         System.out.println(SERVICE_PORT);
@@ -221,40 +230,44 @@ public class NamingServer
             HashMap<String, Object> respText = new HashMap<String, Object>();
             String jsonString = "";
             int returnCode = 200;
+            int command_port = 0;
+            int client_port = 0;
             if ("POST".equals(exchange.getRequestMethod())) {
                 RegisterRequest registerRequest = null;
                 try {
-                    try {
-                        InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
-                        registerRequest = gson.fromJson(isr, RegisterRequest.class);
-                    } catch (Exception e) {
-                        jsonString = "Error during parse JSON object!\n";
-                        returnCode = 400;
-                        this.generateResponseAndClose(exchange, jsonString, returnCode);
-                        return;
-                    }
-                    System.out.println("Register Request is " + registerRequest.toString());
+                    InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+                    registerRequest = gson.fromJson(isr, RegisterRequest.class);
+                } catch (Exception e) {
+                    jsonString = "Error during parse JSON object!\n";
+                    returnCode = 400;
+                    this.generateResponseAndClose(exchange, jsonString, returnCode);
+                    return;
+                }
+                try {
                     String storage_ip = registerRequest.storage_ip;
-                    int client_port = registerRequest.client_port;
-                    int command_port = registerRequest.command_port;
+                    client_port = registerRequest.client_port;
+                    command_port = registerRequest.command_port;
 
-                    /**
-                    Raise exception here if duplicate servers exist
-                     */
+                    System.out.println(command_port + " : " + registerRequest + " 1 ");
+                    ArrayList<StorageServerInfo> currServers = new ArrayList<StorageServerInfo>();
+
+                    /** Raise exception here if duplicate servers exist */
                     if (this.regServers.size() == 0) {
-                        this.regServers.add(new StorageServerInfo(storage_ip, client_port, command_port));
+                        currServers.add(new StorageServerInfo(storage_ip, client_port, command_port));
                     } else {
-                        ArrayList<StorageServerInfo> currServers = this.regServers;
-                        for (StorageServerInfo serverInfo : currServers) {
+                        for (StorageServerInfo serverInfo : this.regServers) {
                             if (serverInfo.verifySameServer(storage_ip, command_port)) {
                                 // Server already has been registered, throw exception
+                                returnCode = 409;
                                 throw new java.lang.IllegalStateException("Illegal State");
                             } else {
-                                this.regServers.add(new StorageServerInfo(storage_ip, client_port, command_port));
+                                currServers.add(new StorageServerInfo(storage_ip, client_port, command_port));
                             }
                         }
                     }
+                    this.regServers = currServers;
                 } catch (Exception e) {
+                    System.out.println("Exception thrown (" + command_port + ") : " + e);
                     returnCode = 409;
                     String exception_type = "IllegalStateException";
                     String exception_info = "This storage client already registered.";
@@ -263,15 +276,18 @@ public class NamingServer
                     return;
                 }
 
-                // Loop over list of files obtained from server
+                /** Loop over list of files obtained from server */
                 for (String filename : registerRequest.files) {
                     Path filePath = new Path(filename);
-                    System.out.println("Name of file: " + filePath);
+                    String[] filelist = filePath.toString().substring(1).split("/");
+                    for (String pathname : filelist)
+                        System.out.println("Name of dir/file : " + pathname);
 
                     // Add new files to tree directory
+                    this.directree.addElement(this.rootdir, filelist);
                 }
 
-                respText.put("files", registerRequest.files);
+                respText.put("files : ", registerRequest.files);
                 jsonString = gson.toJson(respText);
                 returnCode = 200;
                 System.out.println(respText);
