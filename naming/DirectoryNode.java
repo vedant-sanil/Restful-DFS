@@ -1,11 +1,8 @@
 package naming;
 
 import java.util.ArrayList;
-import java.io.*;
-import java.util.*;
-import java.lang.*;
 
-public class DirectoryNode {
+public class DirectoryNode<String> {
     private String data;
     private DirectoryNode parent;
     private ArrayList<DirectoryNode> children;

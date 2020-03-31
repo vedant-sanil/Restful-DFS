@@ -227,7 +227,7 @@ public class NamingServer
 
     private void register() {
         this.registration_skeleton.createContext("/register", (exchange -> {
-            HashMap<String, Object> respText = new HashMap<String, Object>();
+            //HashMap<String, Object> respText = new HashMap<String, Object>();
             String jsonString = "";
             int returnCode = 200;
             int command_port = 0;
@@ -276,28 +276,31 @@ public class NamingServer
                     return;
                 }
 
-                List<String> repeated_list = new ArrayList<String>();
                 /** Loop over list of files obtained from server */
+                List<String> repeated_list = new ArrayList<String>();
                 for (String filename : registerRequest.files) {
                     Path filePath = new Path(filename);
                     String[] filelist = filePath.toString().substring(1).split("/");
-                    for (String pathname : filelist)
-                        System.out.println("Name of dir/file : " + pathname);
+                    System.out.println("--------------------------");
+                    System.out.println("--------------------------");
+                    System.out.println("Files being sent in : " + filePath);
 
                     // Add new files to tree directory
-                    boolean unique_flag = this.directree.addElement(this.rootdir, filelist, true);
-                    System.out.println("Unique Flag is - " + unique_flag);
-                    if (!unique_flag)
-                    {
+                    this.directree.addElement(this.rootdir, filelist);
+                    if (!this.directree.isUnique()) {
                         repeated_list.add(filename);
-                        System.out.println(repeated_list);
+                        System.out.println("The repeated file dir is : " + filename);
                     }
                 }
 
-                respText.put("files", repeated_list);
-                jsonString = gson.toJson(respText);
+                //String[] replLists = repeated_list.toArray()<String>;
+                String[] replLists = new String[repeated_list.size()];
+                replLists = repeated_list.toArray(replLists);
+
+                FilesReturn filesReturn = new FilesReturn(replLists);
+                jsonString = gson.toJson(filesReturn);
                 returnCode = 200;
-                System.out.println(respText);
+                //System.out.println(respText);
             } else {
                 jsonString = "The REST method should be POST for <register>!\n";
                 returnCode = 400;
