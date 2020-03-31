@@ -276,6 +276,7 @@ public class NamingServer
                     return;
                 }
 
+                List<String> repeated_list = new ArrayList<String>();
                 /** Loop over list of files obtained from server */
                 for (String filename : registerRequest.files) {
                     Path filePath = new Path(filename);
@@ -284,10 +285,16 @@ public class NamingServer
                         System.out.println("Name of dir/file : " + pathname);
 
                     // Add new files to tree directory
-                    this.directree.addElement(this.rootdir, filelist);
+                    boolean unique_flag = this.directree.addElement(this.rootdir, filelist, true);
+                    System.out.println("Unique Flag is - " + unique_flag);
+                    if (!unique_flag)
+                    {
+                        repeated_list.add(filename);
+                        System.out.println(repeated_list);
+                    }
                 }
 
-                respText.put("files : ", registerRequest.files);
+                respText.put("files", repeated_list);
                 jsonString = gson.toJson(respText);
                 returnCode = 200;
                 System.out.println(respText);
