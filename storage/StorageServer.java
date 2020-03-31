@@ -201,7 +201,7 @@ public class StorageServer
     {
         this.create();
         this.delete();
-//        this.copy();
+        this.copy();
     }
 
     public static void main(String[] args) throws FileNotFoundException, IOException, TestFailed
@@ -272,6 +272,9 @@ public class StorageServer
                     returnCode = 404;
                     respText.put("exception_type", "IllegalArgumentException");
                     respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
+                    jsonString = gson.toJson(respText);
+                    this.generateResponseAndClose(exchange, jsonString, returnCode);
+                    return;
                 }
                 jsonString = gson.toJson(respText);
                 System.out.println("---");
@@ -290,6 +293,7 @@ public class StorageServer
         this.client_skeleton.createContext("/storage_read", (exchange ->
         {
             System.out.println("Coming into Storage_Read Context");
+            System.out.flush();
             HashMap<String, String> respText = new HashMap<String, String>();
             String jsonString = "";
             int returnCode = 200;
@@ -298,6 +302,7 @@ public class StorageServer
                 try
                 {
                     System.out.println("Coming into POST portion");
+                    System.out.flush();
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     Map<String, Object> map = new HashMap<String, Object>();
                     map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
@@ -306,6 +311,7 @@ public class StorageServer
                     Double offset = (Double) map.get("offset");
                     Double length = (Double) map.get("length");
                     System.out.println((root_dir+filepath) + " - This is the filepath");
+                    System.out.flush();
                     if (filepath.equals("") || filepath == null || filepath.equals("null")) {
                         System.out.println("Illegal Argument");
                         returnCode = 404;
@@ -372,6 +378,9 @@ public class StorageServer
                     returnCode = 404;
                     respText.put("exception_type", "IllegalArgumentException");
                     respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
+                    jsonString = gson.toJson(respText);
+                    this.generateResponseAndClose(exchange, jsonString, returnCode);
+                    return;
                 }
                 returnCode = 200;
                 jsonString = gson.toJson(respText);
@@ -565,6 +574,9 @@ public class StorageServer
                     returnCode = 404;
                     respText.put("exception_type", "IllegalArgumentException");
                     respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
+                    jsonString = gson.toJson(respText);
+                    this.generateResponseAndClose(exchange, jsonString, returnCode);
+                    return;
                 }
                 returnCode = 200;
                 jsonString = gson.toJson(respText);
@@ -652,6 +664,164 @@ public class StorageServer
                     returnCode = 404;
                     respText.put("exception_type", "IllegalArgumentException");
                     respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
+                    jsonString = gson.toJson(respText);
+                    this.generateResponseAndClose(exchange, jsonString, returnCode);
+                    return;
+                }
+                returnCode = 200;
+                jsonString = gson.toJson(respText);
+                System.out.println("---");
+                System.out.println(jsonString);
+            } else {
+                returnCode = 404;
+            }
+            this.generateResponseAndClose(exchange, jsonString, returnCode);
+        }));
+    }
+
+    /** Throws <code>UnsupportedOperationException</code>. */
+    public void copy()
+    {
+        this.command_skeleton.createContext("/storage_copy", (exchange ->
+        {
+            System.out.println("====================Coming into storage_copy Context==================");
+            HashMap<String, String> respText = new HashMap<String, String>();
+            String jsonString = "";
+            int returnCode = 200;
+            if ("POST".equals(exchange.getRequestMethod())) {
+                // parse request json
+                try
+                {
+                    System.out.println("Coming into POST portion");
+                    InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+                    Map<String, Object> map = new HashMap<String, Object>();
+                    map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
+                    System.out.println(map);
+                    String filepath = (String) map.get("path");
+                    String serverIp = (String) map.get("server_ip");
+                    if (serverIp.equals("localhost"))
+                    {
+                        serverIp = "127.0.0.1";
+                    }
+                    Double serverPort = (Double) map.get("server_port");
+                    System.out.println((serverIp) + " - This is the IP");
+                    System.out.println((serverPort) + " - This is the Port");
+                    System.out.println((root_dir+filepath) + " - This is the filepath");
+                    if (filepath.equals("") || filepath == null || filepath.equals("null") || filepath.equals(root_dir) || filepath.equals("/")) {
+                        System.out.println("Illegal Argument");
+                        returnCode = 404;
+                        respText.put("exception_type", "IllegalArgumentException");
+                        respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
+                        jsonString = gson.toJson(respText);
+                        System.out.println("---");
+                        System.out.println(jsonString);
+                        this.generateResponseAndClose(exchange, jsonString, returnCode);
+                        return;
+                    }
+
+                    Map<String, Object> sendText = new HashMap<String, Object>();
+                    sendText.put("path", filepath);
+                    System.out.println(sendText);
+                    HttpClient client = HttpClient.newHttpClient();
+
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(URI.create("http://"+serverIp+":" + serverPort.intValue() + "/storage_size"))
+                            .setHeader("Content-Type", "application/json")
+                            .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(sendText)))
+                            .build();
+                    System.out.println(request);
+                    HttpResponse<String> response;
+                    try
+                    {
+                        response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                    }
+                    catch (Throwable t)
+                    {
+                        throw new TestFailed("unable to send request to naming server", t);
+                    }
+                    if (response.statusCode() != 200)
+                    {
+                        returnCode = 404;
+                        System.out.println("---");
+                        System.out.println(response.body());
+                        this.generateResponseAndClose(exchange, response.body(), returnCode);
+                        return;
+                    } else {
+                        System.out.println("2@2@");
+                        sendText.put("offset", 0.0);
+                        Map<String, String> temp = new HashMap<String,String>();
+                        temp = (Map<String, String>) gson.fromJson(response.body(), temp.getClass());
+                        System.out.println(temp.get("size").getClass());
+                        sendText.put("length", new Double(temp.get("size")));
+                        System.out.println(sendText);
+                        HttpRequest request2 = HttpRequest.newBuilder()
+                                .uri(URI.create("http://"+serverIp+":" + serverPort.intValue() + "/storage_read"))
+                                .setHeader("Content-Type", "application/json")
+                                .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(sendText)))
+                                .build();
+                        System.out.println(request2);
+                        HttpResponse<String> response2;
+                        try
+                        {
+                            response2 = client.send(request2, HttpResponse.BodyHandlers.ofString());
+                        }
+                        catch (Throwable t)
+                        {
+                            throw new TestFailed("unable to send request to naming server", t);
+                        }
+                        System.out.println(response2);
+                        System.out.println(response2.body());
+
+                        // Reading done. Now writing.
+                        Map<String, Object> tempread = new HashMap<String,Object>();
+                        tempread = (Map<String, Object>) gson.fromJson(response2.body(), tempread.getClass());
+                        System.out.println("Temp Read is " + tempread);
+                        byte[] byte_data_write = Base64.getDecoder().decode((String) tempread.get("data"));
+                        String decodedString = new String(byte_data_write);
+                        System.out.println("Data is " + decodedString);
+                        File newFile = new File(root_dir+filepath);
+                        String newDirectory = newFile.getParent();
+                        if (!new File(newDirectory).exists())
+                        {
+                            new File(newDirectory).mkdirs();
+                        }
+                        if (!newFile.exists()) {
+                            newFile.createNewFile();
+                        }
+                        try (FileOutputStream outputStream = new FileOutputStream(newFile))
+                        {
+                            outputStream.write(byte_data_write);
+                            outputStream.flush();
+                            outputStream.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+//                        RandomAccessFile aFile = new RandomAccessFile((root_dir+filepath), "rw");
+//                        FileChannel fchannel = aFile.getChannel();
+//                        ByteBuffer bb = ByteBuffer.wrap(byte_data_write);
+//                        fchannel.position(0);
+//                        fchannel.write(bb);
+
+
+                        // TESTING
+                        System.out.println("\nAfter Writing");
+                        FileReader fro = new FileReader((root_dir+filepath));
+                        int j;
+                        while ((j=fro.read()) != -1)
+                            System.out.print((char) j);
+                        // TESTING ENDS
+                        respText.put("success", "true");
+                        System.out.println("====================Getting out of storage_copy Context==================");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("IOException");
+                    returnCode = 404;
+                    respText.put("exception_type", "IOException");
+                    respText.put("exception_info", "IOException: File/path IO not valid.");
+                    jsonString = gson.toJson(respText);
+                    this.generateResponseAndClose(exchange, jsonString, returnCode);
+                    return;
                 }
                 returnCode = 200;
                 jsonString = gson.toJson(respText);

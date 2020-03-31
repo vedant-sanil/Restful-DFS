@@ -66,6 +66,7 @@ public class RegistrationTest extends NamingTest
         {
             badServer.testDuplicateRegistration();
         }
+
         testMerging();
     }
 
