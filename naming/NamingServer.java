@@ -12,8 +12,12 @@ import java.io.*;
 import storage.StorageServerInfo;
 import java.util.Random;
 import com.google.gson.Gson;
+import java.net.URI;
+import java.net.http.HttpClient;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpExchange;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import test.common.Path;
 import test.util.Test;
 import test.util.TestFailed;
@@ -195,7 +199,7 @@ public class NamingServer
                     System.out.println("--------------------------");
                     System.out.println("File to be checked : " + filePath);
 
-                    if (this.directree.dirExists(this.rootdir, filelist)) {
+                    if (this.directree.fileExists(this.rootdir, filelist)) {
                         // Check if file or directory exists
                         if (this.directree.isDirectoryStatus()) {
                             System.out.println("Is a directory!");
@@ -210,13 +214,13 @@ public class NamingServer
                             returnCode = 200;
                             BooleanReturn booleanReturn = new BooleanReturn(success);
                             jsonString = gson.toJson(booleanReturn);
+                            System.out.println("HHHEEEERRR");
                         }
                     } else {
                         System.out.println("File not found!");
                         throw new FileNotFoundException("File Not Found!");
                     }
-
-                    } catch (IllegalArgumentException e) {
+                } catch (IllegalArgumentException e) {
                         returnCode = 404;
                         String exception_type = "IllegalArgumentException";
                         String exception_info = "File/path cannot be found.";
@@ -264,7 +268,8 @@ public class NamingServer
                     Path filePath = new Path(filepath);
                     String[] filelist = filePath.toString().substring(1).split("/");
                     if (filelist.length == 1) {
-                        parentList = Arrays.copyOfRange(filelist,0,filelist.length);
+                        //parentList = Arrays.copyOfRange(filelist,0,filelist.length);
+                        parentList = new String[] {"/"};
                     } else {
                         parentList = Arrays.copyOfRange(filelist, 0, filelist.length - 1);
                     }
@@ -296,6 +301,7 @@ public class NamingServer
                             booleanReturn = new BooleanReturn(success);
                             jsonString = gson.toJson(booleanReturn);
                         } else {
+                            System.out.println(parentList.length);
                             throw new FileNotFoundException("Directory Not Found!");
                         }
                     }
@@ -347,7 +353,8 @@ public class NamingServer
                     Path filePath = new Path(filepath);
                     String[] filelist = filePath.toString().substring(1).split("/");
                     if (filelist.length == 1) {
-                        parentList = Arrays.copyOfRange(filelist,0,filelist.length);
+                        //parentList = Arrays.copyOfRange(filelist,0,filelist.length);
+                        parentList = new String[] {"/"};
                     } else {
                         parentList = Arrays.copyOfRange(filelist, 0, filelist.length - 1);
                     }
@@ -374,6 +381,16 @@ public class NamingServer
                                 System.out.println("WE ARE CREATING A FILE!");
                                 success = true;
                                 this.directree.addElement(this.rootdir, filelist);
+
+                                // Send the created file to a server
+                                PathRequest request = new PathRequest(filepath);
+                                int commandPort = this.regServers.get(0).getCommand_port();
+
+                                try {
+                                    HttpResponse<String> reponse = this.getResponse("/storage_create", commandPort, request);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
                             returnCode = 200;
                             booleanReturn = new BooleanReturn(success);
@@ -626,6 +643,21 @@ public class NamingServer
             }
             this.generateResponseAndClose(exchange, jsonString, returnCode);
         }));
+    }
+
+    /** Function to generate reponse */
+    private HttpResponse<String> getResponse(String method,
+                                               int port,
+                                               Object requestObj) throws IOException, InterruptedException {
+
+        HttpResponse<String> response;
+        HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:" + port + method))
+                .setHeader("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestObj)))
+                .build();
+
+        response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        return response;
     }
 
     /**

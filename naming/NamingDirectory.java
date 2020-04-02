@@ -50,13 +50,10 @@ public class NamingDirectory<String> {
                 // A unique path has come, add it as new child to the current node
                 System.out.println("A unique LEAF node has come when parent : " + node.getData() + "  HAS children : " + pathName[0]);
                 DirectoryNode child = new DirectoryNode(pathName[0], node);
-                System.out.println("HEEERRRREEE");
                 child.isFile = true;
                 child.isDir = false;
-                System.out.println(child.isDir);
                 tempChild.add(child);
                 this.isUnique = true;
-                System.out.println("HEEERRRREEE");
             }
             node.getChildren().addAll(tempChild);
             return;
@@ -94,6 +91,9 @@ public class NamingDirectory<String> {
 
     /** Traverse through tree to check if file exists */
     public boolean fileExists(DirectoryNode node, String[] pathName) {
+        if (pathName[0].equals("/")) {
+            return true;
+        }
         // Remember, only one unique path per level
         if (pathName.length == 1) {
             // Reached the leaf directory file
@@ -138,6 +138,9 @@ public class NamingDirectory<String> {
 
     /** Traverse directory to check if it exists */
     public boolean dirExists(DirectoryNode node, String[] pathName) {
+        if (pathName[0].equals("/")) {
+            return true;
+        }
         // Remember, only one unique path per level
         if (pathName.length == 1) {
             // Reached the leaf directory file

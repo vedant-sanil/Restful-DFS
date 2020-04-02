@@ -37,7 +37,7 @@ public class CreationTest extends NamingTest
     public static final String  notice =
         "checking naming server creation methods (createFile, createDirectory)";
     /** Prerequisites. */
-    public static final Class[] prerequisites = new Class[] {ListingTest.class};
+    //public static final Class[] prerequisites = new Class[] {ListingTest.class};
 
     /** Storage server used in the test. */
     private CreationTestStorageServer   storage_server;
