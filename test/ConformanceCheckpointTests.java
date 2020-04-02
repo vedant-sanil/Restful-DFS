@@ -20,7 +20,7 @@ public class ConformanceCheckpointTests
                         test.naming.RegistrationTest.class,
 //                        test.naming.ListingTest.class,
 //                        test.naming.CreationTest.class,
-//                        test.naming.StubRetrievalTest.class,
+                        test.naming.StubRetrievalTest.class,
 //                        test.storage.RegistrationTest.class,
 //                        test.storage.AccessTest.class,
 //                        test.storage.DirectoryTest.class,

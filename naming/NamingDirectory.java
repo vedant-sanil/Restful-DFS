@@ -71,6 +71,47 @@ public class NamingDirectory<String> {
         return;
     }
 
+    public boolean fileExists(DirectoryNode node, String[] pathName) {
+        // Remember, only one unique path per level
+        if (pathName.length == 1) {
+            // Reached the leaf directory file
+            //System.out.println("We at the leaf directory!");
+
+            if (node.getChildren().size()==0) {
+                System.out.println("A unique LEAF node has come when parent node : " + node.getData() + " has NO children : " + pathName[0]);
+                return false;
+            } else {
+                ArrayList<DirectoryNode> children = node.getChildren();
+                for (DirectoryNode child : children) {
+                    System.out.println("Here are children for parent node : " + node.getData() + " : " + child.getData());
+                    if (child.getData().equals(pathName[0]) && child.getChildren().size()==0) {
+                        // Exists till the last node
+                        System.out.println("We have reached the end!");
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        if (node.getChildren().size()==0) {
+            return false;
+        } else {
+            ArrayList<DirectoryNode> children = node.getChildren();
+            for (DirectoryNode child : children) {
+                if (child.getData().equals(pathName[0])) {
+                    // First portion of incoming path exists, continue traversal
+                    if (fileExists(child, Arrays.copyOfRange(pathName,1,pathName.length))) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            }
+            return false;
+        }
+    }
+
     public DirectoryNode getRoot() {
         return this.root;
     }

@@ -88,6 +88,10 @@ public class StubRetrievalTest extends NamingTest
             PathRequest request = new PathRequest(path.toString());
             HttpResponse<String> response = getResponse("/getstorage", SERVICE_PORT, request);
             exception_type = gson.fromJson(response.body(), ExceptionReturn.class).exception_type;
+            System.out.println("--------------------");
+            System.out.println(expected_stub.server_ip);
+            System.out.println(expected_stub.server_port);
+            System.out.println("--------------------");
             if(exception_type != null)
             {
                 throw new Throwable(response.body());

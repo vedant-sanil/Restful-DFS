@@ -55,9 +55,11 @@ public class NamingServer
 
     /** Maintain a list of all registered servers*/
     private ArrayList<StorageServerInfo> regServers;
+    private ArrayList<StorageServerInfo> currServers;
 
     /** Directory of all files */
     private NamingDirectory directree;
+    /** Initial root node */
     private DirectoryNode rootdir;
 
     /**
@@ -80,9 +82,7 @@ public class NamingServer
         String[] initList = new String[] {"root"};
         this.directree = new NamingDirectory(initList);
         this.rootdir = directree.getRoot();
-
-        System.out.println(REGISTRATION_PORT);
-        System.out.println(SERVICE_PORT);
+        this.currServers = new ArrayList<StorageServerInfo>();
     }
 
     /** Sets the files the next storage server to connect is expected to
@@ -163,6 +163,83 @@ public class NamingServer
 
     private void add_service_api() {
         this.isValidPath();
+        this.getStorage();
+    }
+
+    public void getStorage() {
+        this.service_skeleton.createContext("/getstorage", (exchange ->
+        {
+            System.out.println("Storage check!");
+            String jsonString = "";
+            int returnCode = 200;
+            if ("POST".equals(exchange.getRequestMethod())) {
+                PathRequest pathRequest = null;
+                try {
+                    InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+                    pathRequest = gson.fromJson(isr, PathRequest.class);
+                    String filepath = pathRequest.path;
+                    String server_ip = "";
+                    int server_port = 0;
+
+                    if (filepath.equals("") || filepath == null || filepath.equals("null")) {
+                        throw new IllegalArgumentException("Illegal Argument!");
+                    }
+
+                    Path filePath = new Path(filepath);
+                    String[] filelist = filePath.toString().substring(1).split("/");
+                    System.out.println("--------------------------");
+                    System.out.println("File to be checked : " + filePath);
+
+                    // Check if files exist in directory and generate appropriate response
+                    if (this.directree.fileExists(this.rootdir, filelist)) {
+                        System.out.println("EXISTS! + " + this.regServers.size());
+                        returnCode = 200;
+
+                        // Loop through servers to check which server file exists in
+                        serverloop:
+                        for (StorageServerInfo s : this.regServers) {
+                            for (String filename : s.getFiles()) {
+                                System.out.println(s.getClient_port() + " : filename is : " + filename);
+                                if (filename.equals(filepath)) {
+                                    server_ip = s.getStorage_ip();
+                                    server_port = s.getClient_port();
+                                    break serverloop;
+                                }
+                            }
+                        }
+
+                        if (server_ip.equals("") || server_port==0) {
+                            throw new IllegalArgumentException("Illegal Argument within existing file!");
+                        }
+
+                        System.out.println("Server IP: " + server_ip + " server port : " + server_port);
+                        ServerInfo serverInfo = new ServerInfo(server_ip, server_port);
+                        jsonString = gson.toJson(serverInfo);
+                    } else {
+                        throw new FileNotFoundException("File Not Found!");
+                    }
+
+                } catch (IllegalArgumentException e) {
+                    returnCode = 404;
+                    String exception_type = "IllegalArgumentException";
+                    String exception_info = "File/path cannot be found.";
+                    ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                    this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                    return;
+                } catch (FileNotFoundException f) {
+                    returnCode = 404;
+                    String exception_type = "FileNotFoundException";
+                    String exception_info = "File/path cannot be found.";
+                    ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                    this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                    return;
+                }
+            } else {
+                jsonString = "The REST method should be POST for <register>!\n";
+                returnCode = 400;
+            }
+            this.generateResponseAndClose(exchange, jsonString, returnCode);
+        }));
     }
 
     public void isValidPath()
@@ -247,25 +324,27 @@ public class NamingServer
                     String storage_ip = registerRequest.storage_ip;
                     client_port = registerRequest.client_port;
                     command_port = registerRequest.command_port;
+                    String[] files = registerRequest.files;
 
-                    System.out.println(command_port + " : " + registerRequest + " 1 ");
-                    ArrayList<StorageServerInfo> currServers = new ArrayList<StorageServerInfo>();
+                    System.out.println(command_port + " : " + registerRequest + " " + this.currServers.size());
 
                     /** Raise exception here if duplicate servers exist */
                     if (this.regServers.size() == 0) {
-                        currServers.add(new StorageServerInfo(storage_ip, client_port, command_port));
+                        this.currServers.add(new StorageServerInfo(storage_ip, client_port, command_port, files));
+                        //System.out.println(command_port + " : " + registerRequest + " " + this.currServers.size());
                     } else {
-                        for (StorageServerInfo serverInfo : this.regServers) {
-                            if (serverInfo.verifySameServer(storage_ip, command_port)) {
+                        for (int i=0; i < this.regServers.size(); i++) {
+                            if (this.regServers.get(i).verifySameServer(storage_ip, command_port)) {
                                 // Server already has been registered, throw exception
                                 returnCode = 409;
                                 throw new java.lang.IllegalStateException("Illegal State");
                             } else {
-                                currServers.add(new StorageServerInfo(storage_ip, client_port, command_port));
+                                this.currServers.add(new StorageServerInfo(storage_ip, client_port, command_port, files));
+                                break;
                             }
                         }
                     }
-                    this.regServers = currServers;
+                    this.regServers = this.currServers;
                 } catch (Exception e) {
                     System.out.println("Exception thrown (" + command_port + ") : " + e);
                     returnCode = 409;
@@ -282,15 +361,16 @@ public class NamingServer
                     Path filePath = new Path(filename);
                     String[] filelist = filePath.toString().substring(1).split("/");
                     System.out.println("--------------------------");
-                    System.out.println("--------------------------");
                     System.out.println("Files being sent in : " + filePath);
 
                     // Add new files to tree directory
                     this.directree.addElement(this.rootdir, filelist);
                     if (!this.directree.isUnique()) {
                         repeated_list.add(filename);
-                        System.out.println("The repeated file dir is : " + filename);
+                        //System.out.println("The repeated file dir is : " + filename);
                     }
+
+                    System.out.println("--------------------------");
                 }
 
                 //String[] replLists = repeated_list.toArray()<String>;
