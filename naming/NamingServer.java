@@ -164,6 +164,204 @@ public class NamingServer
     private void add_service_api() {
         this.isValidPath();
         this.getStorage();
+        this.createDirectory();
+        this.createFile();
+        this.isDirectory();
+        this.createFile();
+    }
+
+    /** Method to check if directory exists */
+    public void isDirectory() {
+        this.service_skeleton.createContext("/is_directory", (exchange ->
+        {
+            System.out.println("Is directory?");
+            String jsonString = "";
+            int returnCode = 0;
+
+            if ("POST".equals(exchange.getRequestMethod())) {
+                PathRequest pathRequest = null;
+                try {
+                    InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+                    pathRequest = gson.fromJson(isr, PathRequest.class);
+                    String filepath = pathRequest.path;
+
+                    // Check path validity
+                    if (filepath.equals("") || filepath == null || filepath.equals("null")) {
+                        throw new IllegalArgumentException("Illegal Argument!");
+                    }
+
+                    Path filePath = new Path(filepath);
+                    String[] filelist = filePath.toString().substring(1).split("/");
+                    System.out.println("--------------------------");
+                    System.out.println("File to be checked : " + filePath);
+
+                    if (this.directree.fileExists(this.rootdir, filelist)) {
+                        // Check if file or directory exists
+                        if (this.directree.isDirectoryStatus()) {
+                            boolean success = true;
+                            returnCode = 200;
+                            BooleanReturn booleanReturn = new BooleanReturn(success);
+                            jsonString = gson.toJson(booleanReturn);
+                        }
+                        if (this.directree.isFileStatus()) {
+                            boolean success = false;
+                            returnCode = 200;
+                            BooleanReturn booleanReturn = new BooleanReturn(success);
+                            jsonString = gson.toJson(booleanReturn);
+                        }
+                    } else {
+                        throw new FileNotFoundException("File Not Found!");
+                    }
+
+                    } catch (IllegalArgumentException e) {
+                        returnCode = 404;
+                        String exception_type = "IllegalArgumentException";
+                        String exception_info = "File/path cannot be found.";
+                        ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                        this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                        return;
+                    } catch (FileNotFoundException f) {
+                        returnCode = 404;
+                        String exception_type = "FileNotFoundException";
+                        String exception_info = "File/path cannot be found.";
+                        ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                        this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                        return;
+                    }
+                } else {
+                    jsonString = "The REST method should be POST for <register>!\n";
+                    returnCode = 400;
+                }
+                this.generateResponseAndClose(exchange, jsonString, returnCode);
+            }));
+    }
+
+    /** Function to create a new directory */
+    public void createDirectory() {
+        this.service_skeleton.createContext("/create_directory", (exchange ->
+        {
+            System.out.println("Create directory!");
+            String jsonString = "";
+            int returnCode = 0;
+            boolean success = false;
+            if ("POST".equals(exchange.getRequestMethod())) {
+                PathRequest pathRequest = null;
+                try {
+                    InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+                    pathRequest = gson.fromJson(isr, PathRequest.class);
+                    String filepath = pathRequest.path;
+
+                    // Check path validity
+                    if (filepath.equals("") || filepath == null || filepath.equals("null")) {
+                        throw new IllegalArgumentException("Illegal Argument!");
+                    }
+
+                    Path filePath = new Path(filepath);
+                    String[] filelist = filePath.toString().substring(1).split("/");
+                    String[] parentList = Arrays.copyOfRange(filelist,0,filelist.length-1);
+                    System.out.println("--------------------------");
+                    System.out.println("File to be checked : " + filePath);
+
+                    if (this.directree.fileExists(this.rootdir, parentList)) {
+                        // Parent directory exists
+                        if (this.directree.fileExists(this.rootdir, filelist)) {
+                            // New file does not exist
+                            success = false;
+                        } else {
+                            success = true;
+                            this.directree.addDirectory(this.rootdir, filelist);
+                        }
+                        returnCode = 200;
+                        BooleanReturn booleanReturn = new BooleanReturn(success);
+                        jsonString = gson.toJson(booleanReturn);
+                    } else {
+                        throw new FileNotFoundException("Directory Not Found!");
+                    }
+                } catch (IllegalArgumentException e) {
+                    returnCode = 404;
+                    String exception_type = "IllegalArgumentException";
+                    String exception_info = "Directory cannot be found.";
+                    ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                    this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                    return;
+                } catch (FileNotFoundException f) {
+                    returnCode = 404;
+                    String exception_type = "FileNotFoundException";
+                    String exception_info = "File/path cannot be found.";
+                    ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                    this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                    return;
+                }
+            } else {
+                jsonString = "The REST method should be POST for <register>!\n";
+                returnCode = 400;
+            }
+            this.generateResponseAndClose(exchange, jsonString, returnCode);
+        }));
+    }
+
+    /** Function to create a new file */
+    public void createFile() {
+        this.service_skeleton.createContext("/create_file", (exchange ->
+        {
+            System.out.println("Create file!");
+            String jsonString = "";
+            int returnCode = 0;
+            boolean success = false;
+            if ("POST".equals(exchange.getRequestMethod())) {
+                PathRequest pathRequest = null;
+                try {
+                    InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+                    pathRequest = gson.fromJson(isr, PathRequest.class);
+                    String filepath = pathRequest.path;
+
+                    // Check path validity
+                    if (filepath.equals("") || filepath == null || filepath.equals("null")) {
+                        throw new IllegalArgumentException("Illegal Argument!");
+                    }
+
+                    Path filePath = new Path(filepath);
+                    String[] filelist = filePath.toString().substring(1).split("/");
+                    String[] parentList = Arrays.copyOfRange(filelist,0,filelist.length-1);
+                    System.out.println("--------------------------");
+                    System.out.println("File to be checked : " + filePath);
+
+                    if (this.directree.fileExists(this.rootdir, parentList)) {
+                        // Parent directory exists
+                        if (this.directree.fileExists(this.rootdir, filelist)) {
+                            // New file does not exist
+                            success = false;
+                        } else {
+                            success = true;
+                            this.directree.addElement(this.rootdir, filelist);
+                        }
+                        returnCode = 200;
+                        BooleanReturn booleanReturn = new BooleanReturn(success);
+                        jsonString = gson.toJson(booleanReturn);
+                    } else {
+                        throw new FileNotFoundException("Directory Not Found!");
+                    }
+                } catch (IllegalArgumentException e) {
+                    returnCode = 404;
+                    String exception_type = "IllegalArgumentException";
+                    String exception_info = "Directory cannot be found.";
+                    ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                    this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                    return;
+                } catch (FileNotFoundException f) {
+                    returnCode = 404;
+                    String exception_type = "FileNotFoundException";
+                    String exception_info = "File/path cannot be found.";
+                    ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                    this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                    return;
+                }
+            } else {
+                jsonString = "The REST method should be POST for <register>!\n";
+                returnCode = 400;
+            }
+            this.generateResponseAndClose(exchange, jsonString, returnCode);
+        }));
     }
 
     public void getStorage() {
