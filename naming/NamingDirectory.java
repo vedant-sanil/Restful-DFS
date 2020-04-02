@@ -89,6 +89,7 @@ public class NamingDirectory<String> {
         return;
     }
 
+    /** Traverse through tree to check if file exists */
     public boolean fileExists(DirectoryNode node, String[] pathName) {
         // Remember, only one unique path per level
         if (pathName.length == 1) {
@@ -122,6 +123,49 @@ public class NamingDirectory<String> {
                 if (child.getData().equals(pathName[0])) {
                     // First portion of incoming path exists, continue traversal
                     if (fileExists(child, Arrays.copyOfRange(pathName,1,pathName.length))) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            }
+            return false;
+        }
+    }
+
+    /** Traverse directory to check if it exists */
+    public boolean dirExists(DirectoryNode node, String[] pathName) {
+        // Remember, only one unique path per level
+        if (pathName.length == 1) {
+            // Reached the leaf directory file
+            //System.out.println("We at the leaf directory!");
+
+            if (node.getChildren().size()==0) {
+                return false;
+            } else {
+                ArrayList<DirectoryNode> children = node.getChildren();
+                for (DirectoryNode child : children) {
+                    System.out.println("Here are children for parent node : " + node.getData() + " : " + child.getData());
+                    if (child.getData().equals(pathName[0]) && child.isDir) {
+                        // Exists till the last node
+                        System.out.println("We have reached the end!");
+                        if (child.isDir && !child.isFile) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+
+        if (node.getChildren().size()==0) {
+            return false;
+        } else {
+            ArrayList<DirectoryNode> children = node.getChildren();
+            for (DirectoryNode child : children) {
+                if (child.getData().equals(pathName[0])) {
+                    // First portion of incoming path exists, continue traversal
+                    if (dirExists(child, Arrays.copyOfRange(pathName,1,pathName.length))) {
                         return true;
                     } else {
                         return false;
