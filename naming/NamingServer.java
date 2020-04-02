@@ -195,21 +195,24 @@ public class NamingServer
                     System.out.println("--------------------------");
                     System.out.println("File to be checked : " + filePath);
 
-                    if (this.directree.fileExists(this.rootdir, filelist)) {
+                    if (this.directree.dirExists(this.rootdir, filelist)) {
                         // Check if file or directory exists
                         if (this.directree.isDirectoryStatus()) {
+                            System.out.println("Is a directory!");
                             boolean success = true;
                             returnCode = 200;
                             BooleanReturn booleanReturn = new BooleanReturn(success);
                             jsonString = gson.toJson(booleanReturn);
                         }
                         if (this.directree.isFileStatus()) {
+                            System.out.println("Is not a directory!");
                             boolean success = false;
                             returnCode = 200;
                             BooleanReturn booleanReturn = new BooleanReturn(success);
                             jsonString = gson.toJson(booleanReturn);
                         }
                     } else {
+                        System.out.println("File not found!");
                         throw new FileNotFoundException("File Not Found!");
                     }
 
@@ -285,6 +288,7 @@ public class NamingServer
                                 System.out.println("File exists");
                                 success = false;
                             } else {
+                                System.out.println("WE ARE CREATING A DIRECTORY!");
                                 success = true;
                                 this.directree.addDirectory(this.rootdir, filelist);
                             }
@@ -332,6 +336,8 @@ public class NamingServer
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     pathRequest = gson.fromJson(isr, PathRequest.class);
                     String filepath = pathRequest.path;
+                    BooleanReturn booleanReturn = null;
+                    String[] parentList;
 
                     // Check path validity
                     if (filepath.equals("") || filepath == null || filepath.equals("null")) {
@@ -340,24 +346,41 @@ public class NamingServer
 
                     Path filePath = new Path(filepath);
                     String[] filelist = filePath.toString().substring(1).split("/");
-                    String[] parentList = Arrays.copyOfRange(filelist,0,filelist.length-1);
+                    if (filelist.length == 1) {
+                        parentList = Arrays.copyOfRange(filelist,0,filelist.length);
+                    } else {
+                        parentList = Arrays.copyOfRange(filelist, 0, filelist.length - 1);
+                    }
                     System.out.println("--------------------------");
                     System.out.println("File to be checked : " + filePath);
 
-                    if (this.directree.fileExists(this.rootdir, parentList)) {
-                        // Parent directory exists
-                        if (this.directree.fileExists(this.rootdir, filelist)) {
-                            // New file does not exist
-                            success = false;
-                        } else {
-                            success = true;
-                            this.directree.addElement(this.rootdir, filelist);
-                        }
+                    if (filepath.equals("/")) {
+                        success = false;
                         returnCode = 200;
-                        BooleanReturn booleanReturn = new BooleanReturn(success);
+                        booleanReturn = new BooleanReturn(success);
                         jsonString = gson.toJson(booleanReturn);
                     } else {
-                        throw new FileNotFoundException("Directory Not Found!");
+                        if (this.directree.dirExists(this.rootdir, parentList)) {
+                            System.out.println("Parent Dir exists");
+                            // Parent directory exists
+                            if (this.directree.fileExists(this.rootdir, filelist)) {
+                                // Path provided is a directory
+                                System.out.println("File exists");
+                                success = false;
+                            } else if (this.directree.dirExists(this.rootdir, filelist)) {
+                                System.out.println("Dir exists");
+                                success = false;
+                            } else {
+                                System.out.println("WE ARE CREATING A FILE!");
+                                success = true;
+                                this.directree.addElement(this.rootdir, filelist);
+                            }
+                            returnCode = 200;
+                            booleanReturn = new BooleanReturn(success);
+                            jsonString = gson.toJson(booleanReturn);
+                        } else {
+                            throw new FileNotFoundException("File Not Found!");
+                        }
                     }
                 } catch (IllegalArgumentException e) {
                     returnCode = 404;

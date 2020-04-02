@@ -50,10 +50,13 @@ public class NamingDirectory<String> {
                 // A unique path has come, add it as new child to the current node
                 System.out.println("A unique LEAF node has come when parent : " + node.getData() + "  HAS children : " + pathName[0]);
                 DirectoryNode child = new DirectoryNode(pathName[0], node);
+                System.out.println("HEEERRRREEE");
                 child.isFile = true;
                 child.isDir = false;
+                System.out.println(child.isDir);
                 tempChild.add(child);
                 this.isUnique = true;
+                System.out.println("HEEERRRREEE");
             }
             node.getChildren().addAll(tempChild);
             return;
@@ -146,10 +149,13 @@ public class NamingDirectory<String> {
                 ArrayList<DirectoryNode> children = node.getChildren();
                 for (DirectoryNode child : children) {
                     System.out.println("Here are children for parent node : " + node.getData() + " : " + child.getData());
+                    System.out.println("The file : " + pathName[0] + " is a directory : " + child.isDir);
                     if (child.getData().equals(pathName[0]) && child.isDir) {
                         // Exists till the last node
                         System.out.println("We have reached the end!");
                         if (child.isDir && !child.isFile) {
+                            this.fileStatus = child.isFile;
+                            this.directoryStatus = child.isDir;
                             return true;
                         }
                     }
@@ -207,6 +213,7 @@ public class NamingDirectory<String> {
                 // A unique path has come, add it as new child to the current node
                 System.out.println("A unique LEAF node has come when parent : " + node.getData() + "  HAS children : " + pathName[0]);
                 DirectoryNode child = new DirectoryNode(pathName[0], node);
+                System.out.println("WHY DOES THIS NOT PRINT The file : " + pathName[0] + " is a directory : " + child.isDir);
                 child.isFile = false;
                 child.isDir = true;
                 tempChild.add(child);
@@ -223,14 +230,14 @@ public class NamingDirectory<String> {
             child.isDir = true;
             tempChild.add(child);
 
-            addElement(tempChild.get(0), Arrays.copyOfRange(pathName,1,pathName.length));
+            addDirectory(tempChild.get(0), Arrays.copyOfRange(pathName,1,pathName.length));
         } else {
             ArrayList<DirectoryNode> children = node.getChildren();
             for (DirectoryNode child : children) {
                 if (child.getData().equals(pathName[0])) {
                     // First portion of incoming path exists, continue traversal
                     System.out.println("A child exists for parent directory  : " + node.getData() + "  that already exists : " + pathName[0]);
-                    addElement(child, Arrays.copyOfRange(pathName,1,pathName.length));
+                    addDirectory(child, Arrays.copyOfRange(pathName,1,pathName.length));
                     return;
                 }
             }
@@ -240,7 +247,7 @@ public class NamingDirectory<String> {
             child.isFile = false;
             child.isDir = true;
             tempChild.add(child);
-            addElement(tempChild.get(0), Arrays.copyOfRange(pathName,1,pathName.length));
+            addDirectory(tempChild.get(0), Arrays.copyOfRange(pathName,1,pathName.length));
         }
         node.getChildren().addAll(tempChild);
         return;
