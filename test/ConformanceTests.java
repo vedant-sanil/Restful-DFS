@@ -23,10 +23,10 @@ public class ConformanceTests
 //                        test.naming.StubRetrievalTest.class,
 //                        test.naming.LockTest.class,
 //                        test.naming.QueueTest.class,
-//                        test.naming.ReplicationTest.class,
-//                        test.naming.DeletionTest.class,
-                        test.storage.RegistrationTest.class,
-                        test.storage.AccessTest.class,
+                        test.naming.ReplicationTest.class,
+                        test.naming.DeletionTest.class,
+//                        test.storage.RegistrationTest.class,
+//                        test.storage.AccessTest.class,
 //                        test.storage.DirectoryTest.class,
 //                        test.storage.ReplicationTest.class
                 };

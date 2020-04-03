@@ -33,8 +33,8 @@ public class ListingTest extends NamingTest
     public static final String  notice =
         "checking naming server directory listing methods (list, isDirectory)";
     /** Prerequisites. */
-    //public static final Class[] prerequisites =
-    //    new Class[] {RegistrationTest.class};
+    public static final Class[] prerequisites =
+        new Class[] {RegistrationTest.class};
 
     /** Storage server providing the files used in the test. */
     private TestStorageServer   storage_server;
@@ -58,13 +58,8 @@ public class ListingTest extends NamingTest
     {
         checkArguments();
 
-        System.out.println("Argument check complete!");
-
         checkDirectoryListing("/", new String[] {"file", "directory"},
                 new boolean[] {false, true});
-
-        System.out.println("One check complete!");
-
         checkDirectoryListing("/directory",
                 new String[] {"file", "another_file"},
                 new boolean[] {false, false});

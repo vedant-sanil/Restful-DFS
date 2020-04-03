@@ -8,6 +8,7 @@ public class DirectoryNode<String> {
     private ArrayList<DirectoryNode> children;
     public boolean isDir;
     public boolean isFile;
+    public RWLocks lock;
 
     public DirectoryNode(String data, DirectoryNode parent) {
         this.data = data;
@@ -15,6 +16,7 @@ public class DirectoryNode<String> {
         this.children = new ArrayList<DirectoryNode>();
         this.isDir = false;
         this.isFile = false;
+        this.lock = new RWLocks();
     }
 
     public String getData() {

@@ -162,7 +162,7 @@ public class TestStorageServer
         // Register the storage server with the naming server.
         HttpResponse<String> response = register(gson, naming_register_port, files);
         files = gson.fromJson(response.body(), FilesReturn.class).files;
-        //System.out.println(files.length);
+
         Path[] delete_files = new Path[files.length];
         for(int i = 0; i < files.length; i++)
         {

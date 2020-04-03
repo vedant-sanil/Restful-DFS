@@ -3,6 +3,8 @@ package naming;
 import java.lang.String;
 import java.util.Arrays;
 import java.util.ArrayList;
+import storage.StorageServerInfo;
+import java.io.IOException;
 
 public class NamingDirectory {
 
@@ -295,6 +297,86 @@ public class NamingDirectory {
         }
         node.getChildren().addAll(tempChild);
         return;
+    }
+
+    public synchronized boolean addLock(DirectoryNode node, String[] pathName, boolean exclusive, int n, ArrayList<StorageServerInfo> regServers, String filepath) throws InterruptedException, IOException
+    {
+        ArrayList<DirectoryNode> tempChild = new ArrayList<DirectoryNode>();
+        // Remember, only one unique path per level
+        if (pathName.length == 1) {
+            // Reached the leaf directory file
+            System.out.println("We at the leaf directory!");
+            ArrayList<DirectoryNode> children = node.getChildren();
+            for (DirectoryNode child : children) {
+                System.out.println("Here are children for parent node : " + node.getData() + " : " + child.getData());
+                if (child.getData().equals(pathName[0])) {
+                    // Exists till the last node
+                    System.out.println("The entire path exists, needs to be handled : " + pathName[0]);
+                    if (exclusive == true)
+                    {
+                        System.out.println(pathName[0] + " gets a writeLock");
+                        child.lock.getWriteLock(n);
+                    } else {
+                        System.out.println(pathName[0] + " gets a readLock");
+                        child.lock.getReadLock(n, regServers, filepath);
+                    }
+                    return true;
+                }
+            }
+            return true;
+        }
+        ArrayList<DirectoryNode> children = node.getChildren();
+        for (DirectoryNode child : children) {
+            if (child.getData().equals(pathName[0])) {
+                // First portion of incoming path exists, continue traversal
+                System.out.println(pathName[0] + " gets a readLock");
+                child.lock.getReadLock(n, regServers, filepath);
+                addLock(child, Arrays.copyOfRange(pathName,1,pathName.length), exclusive, n, regServers, filepath);
+                return true;
+            }
+        }
+        return true;
+    }
+
+    public synchronized boolean releaseLock(DirectoryNode node, String[] pathName, boolean exclusive) throws InterruptedException
+    {
+        ArrayList<DirectoryNode> tempChild = new ArrayList<DirectoryNode>();
+        // Remember, only one unique path per level
+        if (pathName.length == 1) {
+            // Reached the leaf directory file
+            System.out.println("We at the leaf directory!");
+            ArrayList<DirectoryNode> children = node.getChildren();
+            for (DirectoryNode child : children) {
+                System.out.println("Here are children for parent node : " + node.getData() + " : " + child.getData());
+                if (child.getData().equals(pathName[0])) {
+                    // Exists till the last node
+                    System.out.println("The entire path exists, needs to be handled : " + pathName[0]);
+                    if (exclusive == true)
+                    {
+                        System.out.println(pathName[0] + " releases a writeLock");
+                        child.lock.releaseWriteLock();
+                    }
+                    else
+                    {
+                        child.lock.releaseReadLock();
+                        System.out.println(pathName[0] + " releases a readLock");
+                    }
+                    return true;
+                }
+            }
+            return true;
+        }
+        ArrayList<DirectoryNode> children = node.getChildren();
+        for (DirectoryNode child : children) {
+            if (child.getData().equals(pathName[0])) {
+                // First portion of incoming path exists, continue traversal
+                System.out.println("A child exists for parent directory  : " + node.getData() + "  that already exists : " + pathName[0]);
+                child.lock.releaseReadLock();
+                releaseLock(child, Arrays.copyOfRange(pathName,1,pathName.length), exclusive);
+                return true;
+            }
+        }
+        return true;
     }
 
     public boolean isDirectoryStatus() {

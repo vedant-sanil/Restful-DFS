@@ -66,6 +66,10 @@ public class NamingServer
     /** Initial root node */
     private DirectoryNode rootdir;
 
+
+    // Hashmap for the Directory Files - Server Port Mapping
+    public Map<String, Integer> file_port_map = new HashMap<String, Integer>();
+
     /**
      Create the naming server
      */
@@ -173,6 +177,8 @@ public class NamingServer
         this.isDirectory();
         this.createFile();
         this.listDirs();
+        this.lock();
+        this.unlock();
     }
 
     /** List all files in directory */
@@ -475,7 +481,6 @@ public class NamingServer
                                 // Send the created file to a server
                                 PathRequest request = new PathRequest(filepath);
                                 int commandPort = this.regServers.get(0).getCommand_port();
-
                                 try {
                                     HttpResponse<String> reponse = this.getResponse("/storage_create", commandPort, request);
                                 } catch (Exception e) {
@@ -647,6 +652,173 @@ public class NamingServer
         n.start();
     }
 
+
+    public void lock()
+    {
+        this.service_skeleton.createContext("/lock", (exchange ->
+        {
+            HashMap<String, Object> respText = new HashMap<String, Object>();
+            String jsonString = "";
+            int returnCode = 200;
+            Random rand = new Random();
+            if ("POST".equals(exchange.getRequestMethod())) {
+                RegisterRequest registerRequest = null;
+                try {
+                    InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+                    Map<String, Object> map = new HashMap<String, Object>();
+                    map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
+                    System.out.println(map);
+                    String filepath = (String) map.get("path");
+                    System.out.println(filepath + " - This is the filepath");
+                    boolean exclusive = (boolean) map.get("exclusive");
+                    System.out.println(exclusive + " - This is the exclusive");
+                    int n = rand.nextInt(40);
+                    if (filepath.equals("") || filepath == null || filepath.equals("null")) {
+                        System.out.println("Illegal Argument");
+                        returnCode = 404;
+                        respText.put("exception_type", "IllegalArgumentException");
+                        respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
+                        jsonString = gson.toJson(respText);
+                        System.out.println("---");
+                        System.out.println(jsonString);
+                        this.generateResponseAndClose(exchange, jsonString, returnCode);
+                        return;
+                    }
+                    if (filepath.equals("/")) {
+                        if (exclusive) {
+                            this.rootdir.lock.getWriteLock(n);
+                            System.out.println(filepath + "is given WriteLock");
+                        }
+                        else {
+                            this.rootdir.lock.getReadLock(n, regServers, filepath);
+                            System.out.println(filepath + "is given ReadLock");
+                        }
+                        returnCode = 200;
+                        jsonString = "";
+                        this.generateResponseAndClose(exchange, jsonString, returnCode);
+                        return;
+                    }
+                    Path filePath = new Path(filepath);
+                    String[] filelist = filePath.toString().substring(1).split("/");
+                    System.out.println("--------------------------");
+                    System.out.println("File to be Locked : " + filePath);
+                    if (!this.directree.fileExists(this.rootdir, filelist) && !this.directree.dirExists(this.rootdir, filelist)) {
+                        returnCode = 404;
+                        String exception_type = "FileNotFoundException";
+                        String exception_info = "File/path cannot be found.";
+                        ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                        this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                        return;
+                    }
+                    this.rootdir.lock.getReadLock(n, regServers, (String) map.get("path"));
+                    boolean flag_lock = this.directree.addLock(this.rootdir, filelist, exclusive, n, regServers, (String) map.get("path"));
+                    System.out.println(flag_lock);
+                    if (flag_lock) {
+                        jsonString = "";
+                        returnCode = 200;
+                        this.generateResponseAndClose(exchange, jsonString, returnCode);
+                        return;
+                    }
+                } catch (Exception e) {
+                    jsonString = "Error during parse JSON object!\n";
+                    returnCode = 400;
+                    this.generateResponseAndClose(exchange, jsonString, returnCode);
+                    return;
+                }
+            } else {
+                jsonString = "The REST method should be POST for <register>!\n";
+                returnCode = 400;
+            }
+            this.generateResponseAndClose(exchange, jsonString, returnCode);
+        }));
+    }
+
+
+    public void unlock()
+    {
+        this.service_skeleton.createContext("/unlock", (exchange ->
+        {
+            HashMap<String, Object> respText = new HashMap<String, Object>();
+            System.out.println("HERE IS HERE");
+            String jsonString = "";
+            int returnCode = 200;
+            if ("POST".equals(exchange.getRequestMethod())) {
+                RegisterRequest registerRequest = null;
+                try {
+                    System.out.println("========UNLOCK FUNCTION CALLED======");
+                    InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+                    Map<String, Object> map = new HashMap<String, Object>();
+                    map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
+                    System.out.println(map);
+                    String filepath = (String) map.get("path");
+                    System.out.println(filepath + " - This is the filepath");
+                    boolean exclusive = (boolean) map.get("exclusive");
+//                    boolean exclusive_flag = false;
+//                    if (exclusive.equals("true"))5
+//                        exclusive_flag = true;
+                    System.out.println(exclusive + " - This is the exclusive");
+                    if (filepath.equals("/")) {
+                        if (exclusive) {
+                            this.rootdir.lock.releaseWriteLock();
+                            System.out.println(filepath + " releases WriteLock");
+                        }
+                        else {
+                            this.rootdir.lock.releaseReadLock();
+                            System.out.println(filepath + " releases ReadLock");
+                        }
+                        returnCode = 200;
+                        jsonString = "";
+                        this.generateResponseAndClose(exchange, jsonString, returnCode);
+                        return;
+                    }
+                    if (filepath.equals("") || filepath == null || filepath.equals("null")) {
+                        System.out.println("Illegal Argument");
+                        returnCode = 404;
+                        respText.put("exception_type", "IllegalArgumentException");
+                        respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
+                        jsonString = gson.toJson(respText);
+                        System.out.println("---");
+                        System.out.println(jsonString);
+                        this.generateResponseAndClose(exchange, jsonString, returnCode);
+                        return;
+                    }
+                    Path filePath = new Path(filepath);
+                    String[] filelist = filePath.toString().substring(1).split("/");
+                    System.out.println("--------------------------");
+                    System.out.println("File to be Locked : " + filePath);
+                    if (!this.directree.fileExists(this.rootdir, filelist)  && !this.directree.dirExists(this.rootdir, filelist)) {
+                        System.out.println("Illegal Argument");
+                        returnCode = 404;
+                        respText.put("exception_type", "IllegalArgumentException");
+                        respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
+                        jsonString = gson.toJson(respText);
+                        System.out.println("---");
+                        System.out.println(jsonString);
+                        this.generateResponseAndClose(exchange, jsonString, returnCode);
+                        return;
+                    }
+                    this.rootdir.lock.releaseReadLock();
+                    boolean flag_lock = this.directree.releaseLock(this.rootdir, filelist, exclusive);
+                    System.out.println(flag_lock);
+                    if (flag_lock) {
+                        jsonString = "";
+                        returnCode = 200;
+                        this.generateResponseAndClose(exchange, jsonString, returnCode);
+                        return;
+                    }
+                } catch (Exception e) {
+                    jsonString = "Error during parse JSON object!\n";
+                    returnCode = 400;
+                    this.generateResponseAndClose(exchange, jsonString, returnCode);
+                    return;
+                }
+            } else {
+                jsonString = "The REST method should be POST for <register>!\n";
+                returnCode = 400;
+            }
+            this.generateResponseAndClose(exchange, jsonString, returnCode);
+        }));
+    }
 
     private void register() {
         this.registration_skeleton.createContext("/register", (exchange -> {

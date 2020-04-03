@@ -173,16 +173,11 @@ public class TestNamingServer
                 for (String file : registerRequest.files) {
                     Path filePath = new Path(file);
                     storage_server_files.add(filePath);
-                    System.out.println("____ " + filePath.toString());
                 }
 
                 // If expect_files is not null, make sure that the files list received
                 // is the same as the files list expected.
                 if (this.expect_files != null) {
-                    for (int i = 0; i < expect_files.length; i++)
-                    {
-                        System.out.println("E----- "+ expect_files[i].toString());
-                    }
                     if(!TestUtil.sameElements(storage_server_files.toArray(new Path[0]), expect_files))
                     {
                         test.failure(new TestFailed("received wrong file list during " +
@@ -209,7 +204,6 @@ public class TestNamingServer
                 FilesReturn filesReturn = new FilesReturn(to_be_deleted_files.toArray(new String[0]));
                 respText = gson.toJson(filesReturn);
                 returnCode = 200;
-                System.out.println(respText);
             }
             else {
                 respText = "The REST method should be POST for <register>!\n";

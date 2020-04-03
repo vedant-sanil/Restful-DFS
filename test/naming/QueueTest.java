@@ -39,7 +39,7 @@ public class QueueTest extends NamingTest
     public static final String  notice =
         "checking naming server lock queue fairness";
     /** Prerequisites. */
-    public static final Class[] prerequisites = new Class[] {LockTest.class};
+//    public static final Class[] prerequisites = new Class[] {LockTest.class};
 
     /** Path to the root directory. */
     private final Path          root = new Path("/");
@@ -188,6 +188,7 @@ public class QueueTest extends NamingTest
             try
             {
                 LockRequest request = new LockRequest(root.toString(), exclusive);
+                System.out.println("SENDING AN "+exclusive+" EXCLUSIVE LOCK REQUEST");
                 HttpResponse<String> response = getResponse("/lock", SERVICE_PORT, request);
                 if(!response.body().isEmpty())
                 {
@@ -261,6 +262,7 @@ public class QueueTest extends NamingTest
             try
             {
                 LockRequest request = new LockRequest(root.toString(), exclusive);
+                System.out.println("BEGIN TO SEND AN UNLOCK");
                 HttpResponse<String> response = getResponse("/unlock", SERVICE_PORT, request);
                 if(!response.body().isEmpty())
                 {
