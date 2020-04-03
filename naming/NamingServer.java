@@ -686,11 +686,11 @@ public class NamingServer
                     }
                     if (filepath.equals("/")) {
                         if (exclusive) {
-                            this.rootdir.lock.getWriteLock(n);
+                            this.rootdir.lock.getWriteLock(n, regServers, filepath);
                             System.out.println(filepath + "is given WriteLock");
                         }
                         else {
-                            this.rootdir.lock.getReadLock(n, regServers, filepath);
+                            this.rootdir.lock.getReadLock(n, regServers, filepath, true);
                             System.out.println(filepath + "is given ReadLock");
                         }
                         returnCode = 200;
@@ -710,7 +710,7 @@ public class NamingServer
                         this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
                         return;
                     }
-                    this.rootdir.lock.getReadLock(n, regServers, (String) map.get("path"));
+                    this.rootdir.lock.getReadLock(n, regServers, (String) map.get("path"), false);
                     boolean flag_lock = this.directree.addLock(this.rootdir, filelist, exclusive, n, regServers, (String) map.get("path"));
                     System.out.println(flag_lock);
                     if (flag_lock) {

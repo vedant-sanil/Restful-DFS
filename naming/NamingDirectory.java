@@ -315,10 +315,10 @@ public class NamingDirectory {
                     if (exclusive == true)
                     {
                         System.out.println(pathName[0] + " gets a writeLock");
-                        child.lock.getWriteLock(n);
+                        child.lock.getWriteLock(n, regServers, filepath);
                     } else {
                         System.out.println(pathName[0] + " gets a readLock");
-                        child.lock.getReadLock(n, regServers, filepath);
+                        child.lock.getReadLock(n, regServers, filepath, true);
                     }
                     return true;
                 }
@@ -330,7 +330,7 @@ public class NamingDirectory {
             if (child.getData().equals(pathName[0])) {
                 // First portion of incoming path exists, continue traversal
                 System.out.println(pathName[0] + " gets a readLock");
-                child.lock.getReadLock(n, regServers, filepath);
+                child.lock.getReadLock(n, regServers, filepath, false);
                 addLock(child, Arrays.copyOfRange(pathName,1,pathName.length), exclusive, n, regServers, filepath);
                 return true;
             }
