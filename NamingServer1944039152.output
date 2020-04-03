@@ -1,5 +1,5 @@
 MAIN METHOD CALLED
-53460 : RegisterRequest: storage_ip = 127.0.0.1 client_port = 53459 command_port = 53460 /directory/file 0
+53928 : RegisterRequest: storage_ip = 127.0.0.1 client_port = 53927 command_port = 53928 /directory/file 0
 --------------------------
 Files being sent in : /directory/file
 A unique NODE has come when parent  : root  has zero children : directory
@@ -140,7 +140,6 @@ Here are children for parent node : root : another_directory
 Here are children for parent node : root : file
 We have reached the end!
 Is not a directory!
-HHHEEEERRR
 Create file!
 --------------------------
 File to be checked : /another_directory/file
@@ -161,4 +160,3 @@ File to be checked : /another_directory/file
 Here are children for parent node : another_directory : file
 We have reached the end!
 Is not a directory!
-HHHEEEERRR

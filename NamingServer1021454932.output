@@ -1,0 +1,90 @@
+MAIN METHOD CALLED
+53909 : RegisterRequest: storage_ip = 127.0.0.1 client_port = 53908 command_port = 53909 /file /directory/file /directory/another_file 0
+--------------------------
+Files being sent in : /file
+We at the leaf directory!
+A unique LEAF node has come when parent node : root has NO children : file
+--------------------------
+--------------------------
+Files being sent in : /directory/file
+A unique NODE has come when parent  : root  has children : directory
+We at the leaf directory!
+A unique LEAF node has come when parent node : directory has NO children : file
+--------------------------
+--------------------------
+Files being sent in : /directory/another_file
+A child exists for parent directory  : root  that already exists : directory
+We at the leaf directory!
+Here are children for parent node : directory : file
+A unique LEAF node has come when parent : directory  HAS children : another_file
+--------------------------
+Is directory?
+List Files!
+Is directory?
+--------------------------
+File to be checked : /another_file
+Here are children for parent node : root : file
+Here are children for parent node : root : directory
+Here are children for parent node : root : file
+The file : another_file is a directory : false
+Here are children for parent node : root : directory
+The file : another_file is a directory : true
+File not found!
+List Files!
+--------------------------
+Directory to be listed : /another_file
+Here are children for parent node : root : file
+The file : another_file is a directory : false
+Here are children for parent node : root : directory
+The file : another_file is a directory : true
+List Files!
+--------------------------
+Directory to be listed : /file
+Here are children for parent node : root : file
+The file : file is a directory : false
+Here are children for parent node : root : directory
+The file : file is a directory : true
+Is directory?
+--------------------------
+File to be checked : /
+List Files!
+--------------------------
+Directory to be listed : /
+Is directory?
+--------------------------
+File to be checked : //file
+Here are children for parent node : root : file
+We have reached the end!
+Is not a directory!
+Is directory?
+--------------------------
+File to be checked : //directory
+Here are children for parent node : root : file
+Here are children for parent node : root : directory
+Here are children for parent node : root : file
+The file : directory is a directory : false
+Here are children for parent node : root : directory
+The file : directory is a directory : true
+We have reached the end!
+Is a directory!
+List Files!
+--------------------------
+Directory to be listed : /directory
+Here are children for parent node : root : file
+The file : directory is a directory : false
+Here are children for parent node : root : directory
+The file : directory is a directory : true
+We have reached the end!
+Is directory?
+--------------------------
+File to be checked : /directory/file
+Here are children for parent node : directory : file
+We have reached the end!
+Is not a directory!
+Is directory?
+--------------------------
+File to be checked : /directory/another_file
+Here are children for parent node : directory : file
+Here are children for parent node : directory : another_file
+We have reached the end!
+Is not a directory!

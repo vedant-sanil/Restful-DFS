@@ -1,0 +1,85 @@
+MAIN METHOD CALLED
+53953 : RegisterRequest: storage_ip = 127.0.0.1 client_port = 53952 command_port = 53953 /file1 /directory/file2 0
+--------------------------
+Files being sent in : /file1
+We at the leaf directory!
+A unique LEAF node has come when parent node : root has NO children : file1
+--------------------------
+--------------------------
+Files being sent in : /directory/file2
+A unique NODE has come when parent  : root  has children : directory
+We at the leaf directory!
+A unique LEAF node has come when parent node : directory has NO children : file2
+--------------------------
+53955 : RegisterRequest: storage_ip = 127.0.0.1 client_port = 53954 command_port = 53955 /directory/file3 /another_directory/file4 /file1 1
+--------------------------
+Files being sent in : /directory/file3
+A child exists for parent directory  : root  that already exists : directory
+We at the leaf directory!
+Here are children for parent node : directory : file2
+A unique LEAF node has come when parent : directory  HAS children : file3
+--------------------------
+--------------------------
+Files being sent in : /another_directory/file4
+A unique NODE has come when parent  : root  has children : another_directory
+We at the leaf directory!
+A unique LEAF node has come when parent node : another_directory has NO children : file4
+--------------------------
+--------------------------
+Files being sent in : /file1
+We at the leaf directory!
+Here are children for parent node : root : file1
+The entire path exists, needs to be handled : file1
+--------------------------
+Storage check!
+Storage check!
+--------------------------
+File to be checked : /another_file
+Here are children for parent node : root : file1
+Here are children for parent node : root : directory
+Here are children for parent node : root : another_directory
+Storage check!
+--------------------------
+File to be checked : /directory
+Here are children for parent node : root : file1
+Here are children for parent node : root : directory
+Here are children for parent node : root : another_directory
+Storage check!
+--------------------------
+File to be checked : /file1
+Here are children for parent node : root : file1
+We have reached the end!
+EXISTS! + 2
+53952 : filename is : /file1
+Server IP: 127.0.0.1 server port : 53952
+Storage check!
+--------------------------
+File to be checked : /directory/file2
+Here are children for parent node : directory : file2
+We have reached the end!
+EXISTS! + 2
+53952 : filename is : /file1
+53952 : filename is : /directory/file2
+Server IP: 127.0.0.1 server port : 53952
+Storage check!
+--------------------------
+File to be checked : /directory/file3
+Here are children for parent node : directory : file2
+Here are children for parent node : directory : file3
+We have reached the end!
+EXISTS! + 2
+53952 : filename is : /file1
+53952 : filename is : /directory/file2
+53954 : filename is : /directory/file3
+Server IP: 127.0.0.1 server port : 53954
+Storage check!
+--------------------------
+File to be checked : /another_directory/file4
+Here are children for parent node : another_directory : file4
+We have reached the end!
+EXISTS! + 2
+53952 : filename is : /file1
+53952 : filename is : /directory/file2
+53954 : filename is : /directory/file3
+53954 : filename is : /another_directory/file4
+Server IP: 127.0.0.1 server port : 53954

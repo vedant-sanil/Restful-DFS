@@ -4,7 +4,7 @@ import java.lang.String;
 import java.util.Arrays;
 import java.util.ArrayList;
 
-public class NamingDirectory<String> {
+public class NamingDirectory {
 
     private DirectoryNode root;
     private boolean isUnique;
@@ -183,6 +183,47 @@ public class NamingDirectory<String> {
             }
             return false;
         }
+    }
+
+    public ArrayList<String> getFiles(DirectoryNode node, String[] pathName) {
+        ArrayList<String> tempFiles = new ArrayList<String>();
+        if (pathName[0].equals("/")) {
+            ArrayList<DirectoryNode> children = node.getChildren();
+            for (DirectoryNode child : children) {
+                String filename = (String) child.getData();
+                tempFiles.add(filename);
+            }
+            return tempFiles;
+        }
+
+        // At the leaf directories
+        if (pathName.length == 1) {
+            ArrayList<DirectoryNode> children = node.getChildren();
+            for (DirectoryNode child : children) {
+                if (child.getData().equals(pathName[0])) {
+                    ArrayList<DirectoryNode> subchildren = child.getChildren();
+                    for (DirectoryNode subchilds : subchildren) {
+                        if (subchilds.isFile) {
+                            tempFiles.add((String) subchilds.getData());
+                        }
+                    }
+                    return tempFiles;
+                }
+            }
+        }
+
+        if (node.getChildren().size()==0) {
+            return tempFiles;
+        } else {
+            ArrayList<DirectoryNode> children = node.getChildren();
+            for (DirectoryNode child : children) {
+                if (child.getData().equals(pathName[0])) {
+                    return (getFiles(child, Arrays.copyOfRange(pathName,1,pathName.length)));
+                }
+            }
+        }
+
+        return tempFiles;
     }
 
     /**  Add a directory */

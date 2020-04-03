@@ -172,6 +172,87 @@ public class NamingServer
         this.createFile();
         this.isDirectory();
         this.createFile();
+        this.listDirs();
+    }
+
+    /** List all files in directory */
+    public void listDirs() {
+        this.service_skeleton.createContext("/list", (exchange ->
+        {
+            System.out.println("List Files!");
+            String jsonString = "";
+            int returnCode = 0;
+            if ("POST".equals(exchange.getRequestMethod())) {
+                PathRequest pathRequest = null;
+                try {
+                    InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+                    pathRequest = gson.fromJson(isr, PathRequest.class);
+                    String filepath = pathRequest.path;
+                    FilesReturn filesReturn = null;
+                    ArrayList<String> fileList = new ArrayList<String>();
+
+                    // Check path validity
+                    if (filepath.equals("") || filepath == null || filepath.equals("null")) {
+                        throw new IllegalArgumentException("Illegal Argument!");
+                    }
+
+                    // Split file path to create a list of dirs
+                    Path filePath = new Path(filepath);
+                    String compressedPath = filePath.toString().replaceAll("/+","/");
+                    String[] filelist = compressedPath.substring(1).split("/");
+                    System.out.println("--------------------------");
+                    System.out.println("Directory to be listed : " + filePath);
+
+                    if (filepath.equals("/")) {
+                        // Root directory being sent
+                        filelist = new String[] {"/"};
+                        fileList = this.directree.getFiles(this.rootdir, filelist);
+
+                        String files[] = new String[fileList.size()];
+                        for (int i=0; i<fileList.size(); i++) {
+                            files[i] = fileList.get(i);
+                        }
+
+                        returnCode = 200;
+                        filesReturn = new FilesReturn(files);
+                        jsonString = gson.toJson(filesReturn);
+                    } else {
+                        if (this.directree.dirExists(this.rootdir, filelist)) {
+                            fileList = this.directree.getFiles(this.rootdir, filelist);
+
+                            String files[] = new String[fileList.size()];
+                            for (int i=0; i<fileList.size(); i++) {
+                                files[i] = fileList.get(i);
+                            }
+
+                            returnCode = 200;
+                            filesReturn = new FilesReturn(files);
+                            jsonString = gson.toJson(filesReturn);
+                        } else {
+                            throw new FileNotFoundException("Directory Not Found!");
+                        }
+                    }
+                } catch (IllegalArgumentException e) {
+                    returnCode = 404;
+                    String exception_type = "IllegalArgumentException";
+                    String exception_info = "Directory cannot be found.";
+                    ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                    this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                    return;
+                } catch (FileNotFoundException f) {
+                    returnCode = 404;
+                    String exception_type = "FileNotFoundException";
+                    String exception_info = "given path does not refer to a directory.";
+                    ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                    this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                    return;
+                }
+            } else {
+                jsonString = "The REST method should be POST for <register>!\n";
+                returnCode = 400;
+            }
+            this.generateResponseAndClose(exchange, jsonString, returnCode);
+        }));
     }
 
     /** Method to check if directory exists */
@@ -195,11 +276,21 @@ public class NamingServer
                     }
 
                     Path filePath = new Path(filepath);
-                    String[] filelist = filePath.toString().substring(1).split("/");
+                    String compressedPath = filePath.toString().replaceAll("/+","/");
+                    String[] filelist = compressedPath.substring(1).split("/");
                     System.out.println("--------------------------");
                     System.out.println("File to be checked : " + filePath);
 
-                    if (this.directree.fileExists(this.rootdir, filelist)) {
+                    // Return root dir as true
+                    if (filepath.equals("/")) {
+                        returnCode = 200;
+                        BooleanReturn booleanReturn = new BooleanReturn(true);
+                        jsonString = gson.toJson(booleanReturn);
+                        this.generateResponseAndClose(exchange, jsonString, returnCode);
+                        return;
+                    }
+
+                    if (this.directree.fileExists(this.rootdir, filelist) || this.directree.dirExists(this.rootdir, filelist)) {
                         // Check if file or directory exists
                         if (this.directree.isDirectoryStatus()) {
                             System.out.println("Is a directory!");
@@ -214,7 +305,6 @@ public class NamingServer
                             returnCode = 200;
                             BooleanReturn booleanReturn = new BooleanReturn(success);
                             jsonString = gson.toJson(booleanReturn);
-                            System.out.println("HHHEEEERRR");
                         }
                     } else {
                         System.out.println("File not found!");
@@ -244,7 +334,7 @@ public class NamingServer
     }
 
     /** Function to create a new directory */
-    public void createDirectory() {
+    private void createDirectory() {
         this.service_skeleton.createContext("/create_directory", (exchange ->
         {
             System.out.println("Create directory!");
@@ -329,7 +419,7 @@ public class NamingServer
     }
 
     /** Function to create a new file */
-    public void createFile() {
+    private void createFile() {
         this.service_skeleton.createContext("/create_file", (exchange ->
         {
             System.out.println("Create file!");
@@ -422,7 +512,7 @@ public class NamingServer
         }));
     }
 
-    public void getStorage() {
+    private void getStorage() {
         this.service_skeleton.createContext("/getstorage", (exchange ->
         {
             System.out.println("Storage check!");
@@ -498,7 +588,7 @@ public class NamingServer
         }));
     }
 
-    public void isValidPath()
+    private void isValidPath()
     {
         this.service_skeleton.createContext("/is_valid_path", (exchange ->
         {
