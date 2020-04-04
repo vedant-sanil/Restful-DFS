@@ -32,8 +32,8 @@ public class LockTest extends NamingTest
     public static final String  notice =
         "checking naming server lock sharing and exclusion";
     /** Prerequisites. */
-//    public static final Class[] prerequisites =
-//        new Class[] {RegistrationTest.class};
+    public static final Class[] prerequisites =
+        new Class[] {RegistrationTest.class};
 
     /** Storage server used in the test. The purpose of this storage server is
         merely to register some files. It is not used otherwise. */

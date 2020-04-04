@@ -91,6 +91,60 @@ public class NamingDirectory {
         return;
     }
 
+    /** Traverse through tree and delete file exists */
+    public DirectoryNode deleteFile(DirectoryNode node, String[] pathName) {
+        if (pathName[0].equals("/")) {
+            return node;
+        }
+        // Remember, only one unique path per level
+        if (pathName.length == 1) {
+            // Reached the leaf directory file
+            //System.out.println("We at the leaf directory!");
+
+            if (node.getChildren().size()==0) {
+                System.out.println("A unique LEAF node has come when parent node : " + node.getData() + " has NO children : " + pathName[0]);
+                return null;
+            } else {
+                ArrayList<DirectoryNode> children = node.getChildren();
+                for (DirectoryNode child : children) {
+                    System.out.println("Here are children for parent node : " + node.getData() + " : " + child.getData());
+                    if (child.getData().equals(pathName[0]) && child.getChildren().size()==0) {
+                        // Exists till the last node
+                        System.out.println("We have reached the end!");
+                        // Exists till the last node
+                        children.remove(child);
+                        return child;
+                    } else if (child.getData().equals(pathName[0]) && child.isDir) {
+                        if (child.isDir && !child.isFile) {
+                            children.remove(child);
+                            return child;
+                        }
+                    }
+                }
+                return null;
+            }
+        }
+
+        if (node.getChildren().size()==0) {
+            return null;
+        } else {
+            ArrayList<DirectoryNode> children = node.getChildren();
+            for (DirectoryNode child : children) {
+                if (child.getData().equals(pathName[0])) {
+                    // First portion of incoming path exists, continue traversal
+                    DirectoryNode r = deleteFile(child, Arrays.copyOfRange(pathName,1,pathName.length));
+                    System.out.println(r);
+                    if (r != null) {
+                        return r;
+                    } else {
+                        return null;
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
     /** Traverse through tree to check if file exists */
     public boolean fileExists(DirectoryNode node, String[] pathName) {
         if (pathName[0].equals("/")) {
@@ -137,6 +191,7 @@ public class NamingDirectory {
             return false;
         }
     }
+
 
     /** Traverse directory to check if it exists */
     public boolean dirExists(DirectoryNode node, String[] pathName) {
@@ -205,9 +260,9 @@ public class NamingDirectory {
                 if (child.getData().equals(pathName[0])) {
                     ArrayList<DirectoryNode> subchildren = child.getChildren();
                     for (DirectoryNode subchilds : subchildren) {
-                        if (subchilds.isFile) {
+                            if (subchilds.isFile) {
                             tempFiles.add((String) subchilds.getData());
-                        }
+                            }
                     }
                     return tempFiles;
                 }

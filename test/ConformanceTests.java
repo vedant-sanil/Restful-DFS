@@ -16,19 +16,19 @@ public class ConformanceTests
         @SuppressWarnings("unchecked")
         Class<? extends Test>[]     tests =
                 new Class[] {
-//                        test.naming.PathTest.class,
-//                        test.naming.RegistrationTest.class,
-//                        test.naming.ListingTest.class,
-//                        test.naming.CreationTest.class,
-//                        test.naming.StubRetrievalTest.class,
-//                        test.naming.LockTest.class,
-//                        test.naming.QueueTest.class,
+                        test.naming.PathTest.class,
+                        test.naming.RegistrationTest.class,
+                        test.naming.ListingTest.class,
+                        test.naming.CreationTest.class,
+                        test.naming.StubRetrievalTest.class,
+                        test.naming.LockTest.class,
+                        test.naming.QueueTest.class,
                         test.naming.ReplicationTest.class,
                         test.naming.DeletionTest.class,
-//                        test.storage.RegistrationTest.class,
-//                        test.storage.AccessTest.class,
-//                        test.storage.DirectoryTest.class,
-//                        test.storage.ReplicationTest.class
+                        test.storage.RegistrationTest.class,
+                        test.storage.AccessTest.class,
+                        test.storage.DirectoryTest.class,
+                        test.storage.ReplicationTest.class
                 };
         Series series = new Series(tests);
         SeriesReport report = series.run(5, System.out);

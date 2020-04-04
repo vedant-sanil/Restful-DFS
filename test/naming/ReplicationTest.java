@@ -32,8 +32,8 @@ public class ReplicationTest extends NamingTest
     public static final String          notice =
         "checking naming server replication policy";
     /** Prerequisites. */
-//    public static final Class[]         prerequisites =
-//        new Class[] {LockTest.class};
+    public static final Class[]         prerequisites =
+        new Class[] {LockTest.class};
 
     /** Storage server hosting the initial copy of the file. */
     private InvalidationStorageServer   hosting_server = null;

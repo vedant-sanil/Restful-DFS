@@ -179,6 +179,7 @@ public class NamingServer
         this.listDirs();
         this.lock();
         this.unlock();
+        this.delete();
     }
 
     /** List all files in directory */
@@ -640,6 +641,140 @@ public class NamingServer
         }));
     }
 
+    /** Delete all files in directory */
+    public void delete() {
+        this.service_skeleton.createContext("/delete", (exchange ->
+        {
+            System.out.println("Delete Directory!");
+            String jsonString = "";
+            int returnCode = 0;
+            if ("POST".equals(exchange.getRequestMethod())) {
+                PathRequest pathRequest = null;
+                try {
+                    InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+                    pathRequest = gson.fromJson(isr, PathRequest.class);
+                    String filepath = pathRequest.path;
+                    Map<String, Object> respText = new HashMap<String,Object>();
+
+                    // Check path validity
+                    if (filepath.equals("") || filepath == null || filepath.equals("null")) {
+                        throw new IllegalArgumentException("Illegal Argument!");
+                    }
+
+                    // Split file path to create a list of dirs
+                    Path filePath = new Path(filepath);
+                    String compressedPath = filePath.toString().replaceAll("/+","/");
+                    String[] filelist = compressedPath.substring(1).split("/");
+                    HttpResponse<String> response = null;
+                    System.out.println("--------------------------");
+                    System.out.println("Directory to be listed : " + filePath);
+
+                    if (filepath.equals("/")) {
+                        // Root directory being sent
+                        respText.put("success","false");
+                        returnCode = 200;
+                        jsonString = gson.toJson(respText);
+                    } else {
+                        if (this.directree.fileExists(this.rootdir, filelist) || this.directree.dirExists(this.rootdir, filelist)) {
+                            DirectoryNode dir = this.directree.deleteFile(this.rootdir, filelist);
+                            System.out.println("Directory Node I have is - " + dir.getData());
+                            if (dir != null)
+                            {
+                                String server_ip = "";
+                                int server_port = 0;
+                                if (dir.isFile == true)
+                                {
+                                    for (StorageServerInfo s : regServers) {
+                                        for (String filename : s.getFiles()) {
+                                            System.out.println("filename is - "+filename+" , filepath is - "+filepath);
+                                            if (filename.equals(filepath)) {
+                                                System.out.println(s.getClient_port() + " : filename is : " + filename);
+                                                server_ip = s.getStorage_ip();
+                                                server_port = s.getCommand_port();
+                                                System.out.println("File Server IP: "+server_ip+" File Server Client Port: "+s.getClient_port());
+                                                try {
+                                                    response = this.getResponse("/storage_delete", server_port, filePath);
+                                                    System.out.println(response);
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    for (StorageServerInfo s : regServers) {
+                                        for (String filename : s.getFiles()) {
+                                            System.out.println("DIRECTORY - filename is - " + filename + " , filepath is - " + filepath);
+                                            if (filename.contains(filepath)) {
+                                                System.out.println(s.getClient_port() + " : filename is : " + filename);
+                                                server_ip = s.getStorage_ip();
+                                                server_port = s.getCommand_port();
+                                                System.out.println("File Server IP: " + server_ip + " File Server Client Port: " + s.getClient_port());
+                                                try {
+                                                    response = this.getResponse("/storage_delete", server_port, filePath);
+                                                    System.out.println(response);
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                try {
+                                    if (!dir.lock.portmap.isEmpty()) {
+                                        System.out.println("Deletion of Replica " + dir.lock.portmap);
+                                        Set<Integer> deletion_set = dir.lock.portmap.remove(filepath);
+                                        Map<String, Object> req = new HashMap<String, Object>();
+                                        req.put("path", filepath);
+                                        if (!deletion_set.isEmpty()) {
+                                            for (int i : deletion_set) {
+                                                response = this.getResponse("/storage_delete", deletion_set.stream().findFirst().get(), req);
+                                                System.out.println("Deletion - Response is " + response);
+                                                System.out.println(deletion_set);
+                                            }
+                                        }
+                                    }
+                                    returnCode = 200;
+                                    Map<String, Object> tempread = new HashMap<String,Object>();
+                                    tempread = (Map<String, Object>) gson.fromJson(response.body(), tempread.getClass());
+                                    this.generateResponseAndClose(exchange, gson.toJson(tempread), returnCode);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+
+                            } else {
+                                respText.put("success", "false");
+                                returnCode = 200;
+                                jsonString = gson.toJson(respText);
+                            }
+                        } else {
+                            throw new FileNotFoundException("Directory Not Found!");
+                        }
+                    }
+                } catch (IllegalArgumentException e) {
+                    returnCode = 404;
+                    String exception_type = "IllegalArgumentException";
+                    String exception_info = "Directory cannot be found.";
+                    ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                    this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                    return;
+                } catch (FileNotFoundException f) {
+                    returnCode = 404;
+                    String exception_type = "FileNotFoundException";
+                    String exception_info = "given path does not refer to a directory.";
+                    ExceptionReturn exceptionReturn = new ExceptionReturn(exception_type, exception_info);
+                    this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
+                    return;
+                }
+            } else {
+                jsonString = "The REST method should be POST for <register>!\n";
+                returnCode = 400;
+            }
+            this.generateResponseAndClose(exchange, jsonString, returnCode);
+        }));
+    }
+
     public static void main(String[] args) throws FileNotFoundException, IOException, TestFailed
     {
         Random rand = new Random();
@@ -917,7 +1052,7 @@ public class NamingServer
                 .setHeader("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestObj)))
                 .build();
-
+        System.out.println("HTTP Request is "+request);
         response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         return response;
     }
