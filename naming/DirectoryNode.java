@@ -1,13 +1,21 @@
-package naming;
+  package naming;
 
 import java.util.ArrayList;
 
 public class DirectoryNode<String> {
+
+    // Contains the directory name
     private String data;
+
+    // Recording the parent as well as the children for the current node.
     private DirectoryNode parent;
     private ArrayList<DirectoryNode> children;
+
+    // Signifies whether the Node is a File or a Directory.
     public boolean isDir;
     public boolean isFile;
+
+    // Lock for each Node.
     public RWLocks lock;
 
     public DirectoryNode(String data, DirectoryNode parent) {

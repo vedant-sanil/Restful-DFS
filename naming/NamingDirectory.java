@@ -27,10 +27,9 @@ public class NamingDirectory {
         // Remember, only one unique path per level
         if (pathName.length == 1) {
             // Reached the leaf directory file
-            System.out.println("We at the leaf directory!");
 
             if (node.getChildren().size()==0) {
-                System.out.println("A unique LEAF node has come when parent node : " + node.getData() + " has NO children : " + pathName[0]);
+                // There is a unique leaf node for the parent node
                 ArrayList<DirectoryNode> children = node.getChildren();
                 DirectoryNode child = new DirectoryNode(pathName[0], node);
                 child.isFile = true;
@@ -41,16 +40,13 @@ public class NamingDirectory {
             } else {
                 ArrayList<DirectoryNode> children = node.getChildren();
                 for (DirectoryNode child : children) {
-                    System.out.println("Here are children for parent node : " + node.getData() + " : " + child.getData());
                     if (child.getData().equals(pathName[0])) {
-                        // Exists till the last node
-                        System.out.println("The entire path exists, needs to be handled : " + pathName[0]);
+                        // Entire path exists till the last node.
                         this.isUnique = false;
                         return;
                     }
                 }
                 // A unique path has come, add it as new child to the current node
-                System.out.println("A unique LEAF node has come when parent : " + node.getData() + "  HAS children : " + pathName[0]);
                 DirectoryNode child = new DirectoryNode(pathName[0], node);
                 child.isFile = true;
                 child.isDir = false;
@@ -62,7 +58,7 @@ public class NamingDirectory {
         }
 
         if (node.getChildren().size()==0) {
-            System.out.println("A unique NODE has come when parent  : " + node.getData() + "  has zero children : " + pathName[0]);
+            // Unique node has come in and needs to be added
             DirectoryNode child = new DirectoryNode(pathName[0], node);
             child.isFile = false;
             child.isDir = true;
@@ -74,13 +70,11 @@ public class NamingDirectory {
             for (DirectoryNode child : children) {
                 if (child.getData().equals(pathName[0])) {
                     // First portion of incoming path exists, continue traversal
-                    System.out.println("A child exists for parent directory  : " + node.getData() + "  that already exists : " + pathName[0]);
                     addElement(child, Arrays.copyOfRange(pathName,1,pathName.length));
                     return;
                 }
             }
             // A unique path has come, add it as new child to the current node
-            System.out.println("A unique NODE has come when parent  : " + node.getData() + "  has children : " + pathName[0]);
             DirectoryNode child = new DirectoryNode(pathName[0], node);
             child.isFile = false;
             child.isDir = true;
@@ -91,7 +85,7 @@ public class NamingDirectory {
         return;
     }
 
-    /** Traverse through tree and delete file exists */
+    /** Traverse through tree and pass the file node to delete exists */
     public DirectoryNode deleteFile(DirectoryNode node, String[] pathName) {
         if (pathName[0].equals("/")) {
             return node;
@@ -99,22 +93,21 @@ public class NamingDirectory {
         // Remember, only one unique path per level
         if (pathName.length == 1) {
             // Reached the leaf directory file
-            //System.out.println("We at the leaf directory!");
 
             if (node.getChildren().size()==0) {
-                System.out.println("A unique LEAF node has come when parent node : " + node.getData() + " has NO children : " + pathName[0]);
+                // Unique leaf node come in. So we cant delete and hence no return of directory
                 return null;
             } else {
                 ArrayList<DirectoryNode> children = node.getChildren();
                 for (DirectoryNode child : children) {
-                    System.out.println("Here are children for parent node : " + node.getData() + " : " + child.getData());
                     if (child.getData().equals(pathName[0]) && child.getChildren().size()==0) {
-                        // Exists till the last node
-                        System.out.println("We have reached the end!");
-                        // Exists till the last node
+                        // Path exists till the last node. We return the child whose path matches so that deletion can
+                        // be carried out.
                         children.remove(child);
                         return child;
                     } else if (child.getData().equals(pathName[0]) && child.isDir) {
+                        // This piece of code is triggered whenever the Path is a directory. We need to return the
+                        // node back to the delete function to delete.
                         if (child.isDir && !child.isFile) {
                             children.remove(child);
                             return child;
@@ -131,9 +124,8 @@ public class NamingDirectory {
             ArrayList<DirectoryNode> children = node.getChildren();
             for (DirectoryNode child : children) {
                 if (child.getData().equals(pathName[0])) {
-                    // First portion of incoming path exists, continue traversal
+                    // First portion of incoming path exists, continue traversal to delete
                     DirectoryNode r = deleteFile(child, Arrays.copyOfRange(pathName,1,pathName.length));
-                    System.out.println(r);
                     if (r != null) {
                         return r;
                     } else {
@@ -153,18 +145,15 @@ public class NamingDirectory {
         // Remember, only one unique path per level
         if (pathName.length == 1) {
             // Reached the leaf directory file
-            //System.out.println("We at the leaf directory!");
 
             if (node.getChildren().size()==0) {
-                System.out.println("A unique LEAF node has come when parent node : " + node.getData() + " has NO children : " + pathName[0]);
+                // This is a unique node.
                 return false;
             } else {
                 ArrayList<DirectoryNode> children = node.getChildren();
                 for (DirectoryNode child : children) {
-                    System.out.println("Here are children for parent node : " + node.getData() + " : " + child.getData());
                     if (child.getData().equals(pathName[0]) && child.getChildren().size()==0) {
-                        // Exists till the last node
-                        System.out.println("We have reached the end!");
+                        // Path exisits completely.
                         this.fileStatus = child.isFile;
                         this.directoryStatus = child.isDir;
                         return true;
@@ -201,18 +190,14 @@ public class NamingDirectory {
         // Remember, only one unique path per level
         if (pathName.length == 1) {
             // Reached the leaf directory file
-            //System.out.println("We at the leaf directory!");
 
             if (node.getChildren().size()==0) {
                 return false;
             } else {
                 ArrayList<DirectoryNode> children = node.getChildren();
                 for (DirectoryNode child : children) {
-                    System.out.println("Here are children for parent node : " + node.getData() + " : " + child.getData());
-                    System.out.println("The file : " + pathName[0] + " is a directory : " + child.isDir);
                     if (child.getData().equals(pathName[0]) && child.isDir) {
-                        // Exists till the last node
-                        System.out.println("We have reached the end!");
+                        // Directory exists
                         if (child.isDir && !child.isFile) {
                             this.fileStatus = child.isFile;
                             this.directoryStatus = child.isDir;
@@ -289,10 +274,8 @@ public class NamingDirectory {
         // Remember, only one unique path per level
         if (pathName.length == 1) {
             // Reached the leaf directory file
-            System.out.println("We at the leaf directory!");
-
             if (node.getChildren().size()==0) {
-                System.out.println("A unique LEAF node has come when parent node : " + node.getData() + " has NO children : " + pathName[0]);
+                // Unique Directory.
                 ArrayList<DirectoryNode> children = node.getChildren();
                 DirectoryNode child = new DirectoryNode(pathName[0], node);
                 child.isFile = false;
@@ -303,18 +286,14 @@ public class NamingDirectory {
             } else {
                 ArrayList<DirectoryNode> children = node.getChildren();
                 for (DirectoryNode child : children) {
-                    System.out.println("Here are children for parent node : " + node.getData() + " : " + child.getData());
                     if (child.getData().equals(pathName[0])) {
                         // Exists till the last node
-                        System.out.println("The entire path exists, needs to be handled : " + pathName[0]);
                         this.isUnique = false;
                         return;
                     }
                 }
                 // A unique path has come, add it as new child to the current node
-                System.out.println("A unique LEAF node has come when parent : " + node.getData() + "  HAS children : " + pathName[0]);
                 DirectoryNode child = new DirectoryNode(pathName[0], node);
-                System.out.println("WHY DOES THIS NOT PRINT The file : " + pathName[0] + " is a directory : " + child.isDir);
                 child.isFile = false;
                 child.isDir = true;
                 tempChild.add(child);
@@ -325,7 +304,6 @@ public class NamingDirectory {
         }
 
         if (node.getChildren().size()==0) {
-            System.out.println("A unique NODE has come when parent  : " + node.getData() + "  has zero children : " + pathName[0]);
             DirectoryNode child = new DirectoryNode(pathName[0], node);
             child.isFile = false;
             child.isDir = true;
@@ -337,13 +315,11 @@ public class NamingDirectory {
             for (DirectoryNode child : children) {
                 if (child.getData().equals(pathName[0])) {
                     // First portion of incoming path exists, continue traversal
-                    System.out.println("A child exists for parent directory  : " + node.getData() + "  that already exists : " + pathName[0]);
                     addDirectory(child, Arrays.copyOfRange(pathName,1,pathName.length));
                     return;
                 }
             }
             // A unique path has come, add it as new child to the current node
-            System.out.println("A unique NODE has come when parent  : " + node.getData() + "  has children : " + pathName[0]);
             DirectoryNode child = new DirectoryNode(pathName[0], node);
             child.isFile = false;
             child.isDir = true;
@@ -360,19 +336,14 @@ public class NamingDirectory {
         // Remember, only one unique path per level
         if (pathName.length == 1) {
             // Reached the leaf directory file
-            System.out.println("We at the leaf directory!");
             ArrayList<DirectoryNode> children = node.getChildren();
             for (DirectoryNode child : children) {
-                System.out.println("Here are children for parent node : " + node.getData() + " : " + child.getData());
                 if (child.getData().equals(pathName[0])) {
-                    // Exists till the last node
-                    System.out.println("The entire path exists, needs to be handled : " + pathName[0]);
+                    // Path Exists till the last node and you need to lock depending on the flag.
                     if (exclusive == true)
                     {
-                        System.out.println(pathName[0] + " gets a writeLock");
                         child.lock.getWriteLock(n, regServers, filepath);
                     } else {
-                        System.out.println(pathName[0] + " gets a readLock");
                         child.lock.getReadLock(n, regServers, filepath, true);
                     }
                     return true;
@@ -384,7 +355,6 @@ public class NamingDirectory {
         for (DirectoryNode child : children) {
             if (child.getData().equals(pathName[0])) {
                 // First portion of incoming path exists, continue traversal
-                System.out.println(pathName[0] + " gets a readLock");
                 child.lock.getReadLock(n, regServers, filepath, false);
                 addLock(child, Arrays.copyOfRange(pathName,1,pathName.length), exclusive, n, regServers, filepath);
                 return true;
@@ -399,22 +369,17 @@ public class NamingDirectory {
         // Remember, only one unique path per level
         if (pathName.length == 1) {
             // Reached the leaf directory file
-            System.out.println("We at the leaf directory!");
             ArrayList<DirectoryNode> children = node.getChildren();
             for (DirectoryNode child : children) {
-                System.out.println("Here are children for parent node : " + node.getData() + " : " + child.getData());
                 if (child.getData().equals(pathName[0])) {
-                    // Exists till the last node
-                    System.out.println("The entire path exists, needs to be handled : " + pathName[0]);
+                    // Exists till the last node and now releaseLock
                     if (exclusive == true)
                     {
-                        System.out.println(pathName[0] + " releases a writeLock");
                         child.lock.releaseWriteLock();
                     }
                     else
                     {
                         child.lock.releaseReadLock();
-                        System.out.println(pathName[0] + " releases a readLock");
                     }
                     return true;
                 }
@@ -425,7 +390,6 @@ public class NamingDirectory {
         for (DirectoryNode child : children) {
             if (child.getData().equals(pathName[0])) {
                 // First portion of incoming path exists, continue traversal
-                System.out.println("A child exists for parent directory  : " + node.getData() + "  that already exists : " + pathName[0]);
                 child.lock.releaseReadLock();
                 releaseLock(child, Arrays.copyOfRange(pathName,1,pathName.length), exclusive);
                 return true;

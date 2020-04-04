@@ -193,13 +193,6 @@ public class StorageServer
 
     public static void main(String[] args) throws FileNotFoundException, IOException, TestFailed
     {
-        // Code to redirect the Output to files.
-        Random rand = new Random();
-        File file = new File("./StorageServer" + rand.nextInt() + ".output");
-        PrintStream stream = new PrintStream(file);
-        System.setOut(stream);
-        System.setErr(stream);
-
         // New storage server is created.
         StorageServer s = new StorageServer(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]), args[3]);
         s.start(Integer.parseInt(args[2]));
