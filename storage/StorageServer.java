@@ -64,13 +64,9 @@ public class StorageServer
         this.command_skeleton.setExecutor(Executors.newCachedThreadPool());
         skeletons_started = false;
         gson = new Gson();
-        System.out.println(CLIENT_PORT);
-        System.out.println(COMMAND_PORT);
-        System.out.println(NAMING_PORT);
-        System.out.println(root_dir);
-        System.out.println("--------------------");
     }
 
+    /** For starting the respective skeletons */
     protected synchronized void startSkeletons() throws TestFailed
     {
         // Prevent repeated starting of the skeletons and re-creation of stubs.
@@ -106,9 +102,6 @@ public class StorageServer
     /** Register to a naming server */
     public HttpResponse<String> register(Gson gson, int naming_register_port, String[] files) throws TestFailed
     {
-//        int storagePort = this.client_skeleton.getAddress().getPort();
-//        int commandPort = this.command_skeleton.getAddress().getPort();
-
         RegisterRequest registerRequest = new RegisterRequest(STORAGE_IP, CLIENT_PORT, COMMAND_PORT, files);
         HttpClient client = HttpClient.newHttpClient();
 
@@ -145,10 +138,10 @@ public class StorageServer
         String[] delete_files_string = new String[files.length];
 
 
+        // Make sure the root directory is removed from each file path
         for(int i = 0; i < files.length; i++)
         {
             files_string[i] = files[i].toString().replace(root_dir, "");
-            System.out.println(files_string[i]);
         }
 
         // Register the storage server with the naming server.
@@ -156,24 +149,18 @@ public class StorageServer
         delete_files_string = gson.fromJson(response.body(), FilesReturn.class).files;
         File[] delete_files = new File[delete_files_string.length];
 
-//        System.out.println(root_dir);
-        System.out.println("DELETED FILES");
+        // Looping across the returned files from Naming Server in order to remove the duplicates.
         for(int i = 0; i < delete_files_string.length; i++)
         {
-            System.out.println("-----");
-            System.out.println(delete_files_string[i]);
-            System.out.println("-----");
             delete_files[i] = new File(root_dir + delete_files_string[i]);
-            System.out.println(delete_files[i]);
             boolean a = delete_files[i].delete();
-            System.out.println(a);
             String dir = delete_files[i].getParent();
             File dirfile = new File(dir);
+            // Whenever the number of files in the directory become 0, we have to make sure that the directory is also
+            // deleted
             while (dirfile.list().length == 0)
             {
-                System.out.println(dirfile);
                 a = dirfile.delete();
-                System.out.println(a);
                 String d = dirfile.getParent();
                 dirfile = new File(d);
             }
@@ -206,22 +193,23 @@ public class StorageServer
 
     public static void main(String[] args) throws FileNotFoundException, IOException, TestFailed
     {
+        // Code to redirect the Output to files.
         Random rand = new Random();
         File file = new File("./StorageServer" + rand.nextInt() + ".output");
         PrintStream stream = new PrintStream(file);
         System.setOut(stream);
         System.setErr(stream);
-        System.out.println("MAIN METHOD CALLED");
+
+        // New storage server is created.
         StorageServer s = new StorageServer(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]), args[3]);
         s.start(Integer.parseInt(args[2]));
     }
 
-    /** Throws <code>UnsupportedOperationException</code>. */
+    /** Gets the size of the file stored on the storage server. */
     public void size() throws TestFailed
     {
         this.client_skeleton.createContext("/storage_size", (exchange ->
         {
-            System.out.println("Coming into Storage Context");
             HashMap<String, String> respText = new HashMap<String, String>();
             String jsonString = "";
             int returnCode = 200;
@@ -229,38 +217,37 @@ public class StorageServer
                 // parse request json
                 try
                 {
-                    System.out.println("Coming into POST portion");
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     Map<String, String> map = new HashMap<String, String>();
                     map = (Map<String, String>) gson.fromJson(isr, map.getClass());
-                    System.out.println(map);
                     String filepath = map.get("path");
-                    System.out.println((root_dir+filepath) + " - This is the filepath");
+
+                    // If the filepath is null, we need to return IllegalArgumentException
                     if (filepath.equals("")) {
-                        System.out.println("Illegal Argument");
                         returnCode = 404;
                         respText.put("exception_type", "IllegalArgumentException");
                         respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
                     try {
                         String path = root_dir + filepath;
                         File f = new File(path);
+
+                        // Code to verify if the path is a file and exists. If not then
+                        // API tells us to return FileNotFoundException.
                         if (!f.exists() || f.isDirectory()) {
-                            System.out.println("This does not exist/This is a directory");
                             returnCode = 404;
                             respText.put("exception_type", "FileNotFoundException");
                             respText.put("exception_info", "FileNotFoundException: File/path not found.");
                             jsonString = gson.toJson(respText);
-                            System.out.println("---");
-                            System.out.println(jsonString);
                             this.generateResponseAndClose(exchange, jsonString, returnCode);
                             return;
                         }
+
+                        // Returning a 200 OK, if none of the exceptions are raised along with the
+                        // size for the path passed.
                         long length = f.length();
                         respText.put("size", String.valueOf(length));
                         returnCode = 200;
@@ -268,7 +255,6 @@ public class StorageServer
                         e.printStackTrace();
                     }
                 } catch (Exception e) {
-                    System.out.println("Illegal Argument");
                     returnCode = 404;
                     respText.put("exception_type", "IllegalArgumentException");
                     respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
@@ -277,8 +263,6 @@ public class StorageServer
                     return;
                 }
                 jsonString = gson.toJson(respText);
-                System.out.println("---");
-                System.out.println(jsonString);
             }
             else {
                 returnCode = 404;
@@ -287,12 +271,11 @@ public class StorageServer
         }));
     }
 
-    /** Throws <code>UnsupportedOperationException</code>. */
+    /** Responsible for reading the data from a file placed on a storage server */
     public void read()
     {
         this.client_skeleton.createContext("/storage_read", (exchange ->
         {
-            System.out.println("Coming into Storage_Read Context");
             System.out.flush();
             HashMap<String, String> respText = new HashMap<String, String>();
             String jsonString = "";
@@ -301,80 +284,71 @@ public class StorageServer
                 // parse request json
                 try
                 {
-                    System.out.println("Coming into POST portion");
-                    System.out.flush();
+                    // Reading the HTTP Exchange into a hashmap from which individual values can
+                    // be extracted.
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     Map<String, Object> map = new HashMap<String, Object>();
                     map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
-                    System.out.println(map);
                     String filepath = (String) map.get("path");
                     Double offset = (Double) map.get("offset");
                     Double length = (Double) map.get("length");
-                    System.out.println((root_dir+filepath) + " - This is the filepath");
-                    System.out.flush();
+
+                    // If the filepath is null, the API states that we must pass IllegalArgumentException
                     if (filepath.equals("") || filepath == null || filepath.equals("null")) {
-                        System.out.println("Illegal Argument");
                         returnCode = 404;
                         respText.put("exception_type", "IllegalArgumentException");
                         respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
+
+                    // Negative values for offset and length must raise IndexOutOfBoundsException.
                     if (offset < 0 || length < 0) {
-                        System.out.println("Index out of Bound");
                         returnCode = 404;
                         respText.put("exception_type", "IndexOutOfBoundsException");
                         respText.put("exception_info", "IndexOutOfBoundsException: Offset/Length Index is negative/out of bounds.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
+
+                    // Code to verify if the path is a file and exists. If not then
+                    // API tells us to return FileNotFoundException.
                     String path = root_dir + filepath;
                     File f = new File(path);
                     if (!f.exists() || f.isDirectory()) {
-                        System.out.println("This does not exist" + !f.exists() + " /This is a directory "+ f.isDirectory());
                         returnCode = 404;
                         respText.put("exception_type", "FileNotFoundException");
                         respText.put("exception_info", "FileNotFoundException: File/path not found.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
+
+                    // We dont want to outshoot the total length of the file when we go from
+                    // offset till the amount that has been asked to be read. So in this case,
+                    // We are checking if the values actually are within bounds. Else IndexOutOfBoundsException.
                     FileInputStream fstream = new FileInputStream(f);
-                    System.out.println("Values of offset, length and filesize are :");
-                    System.out.println(offset+" "+length+" "+fstream.available());
                     if ((offset.intValue() + length.intValue()) <= fstream.available())
                     {
-                        System.out.println("Read data properly");
                         byte[] bytes = new byte[length.intValue()];
                         fstream.read(bytes, offset.intValue(), length.intValue());
                         String str = Base64.getEncoder().encodeToString(bytes);
-//                        String str = new String(bytes, StandardCharsets.UTF_8);
                         respText.put("data", str);
-                        System.out.println(respText);
                         fstream.close();
                     } else {
-                        System.out.println("Index out of Bound");
                         returnCode = 404;
                         respText.put("exception_type", "IndexOutOfBoundsException");
                         respText.put("exception_info", "IndexOutOfBoundsException: Offset/Length Index is negative/out of bounds.");
                         fstream.close();
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
+
                 } catch (Exception e) {
                     e.printStackTrace();
-                    System.out.println("Illegal Argument");
                     returnCode = 404;
                     respText.put("exception_type", "IllegalArgumentException");
                     respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
@@ -382,10 +356,10 @@ public class StorageServer
                     this.generateResponseAndClose(exchange, jsonString, returnCode);
                     return;
                 }
+
+                // Comes here when no other exception is caught. Which is why ReturnCode = 200.
                 returnCode = 200;
                 jsonString = gson.toJson(respText);
-                System.out.println("---");
-                System.out.println(jsonString);
             } else {
                 returnCode = 404;
             }
@@ -393,12 +367,11 @@ public class StorageServer
         }));
     }
 
-    /** Throws <code>UnsupportedOperationException</code>. */
+    /** Responsible for writing into a file on the storage server */
     public void write()
     {
         this.client_skeleton.createContext("/storage_write", (exchange ->
         {
-            System.out.println("Coming into storage_write Context");
             HashMap<String, String> respText = new HashMap<String, String>();
             String jsonString = "";
             int returnCode = 200;
@@ -406,119 +379,79 @@ public class StorageServer
                 // parse request json
                 try
                 {
-                    System.out.println("Coming into POST portion");
+                    // Reading the HTTP Exchange into a hashmap from which individual values can
+                    // be extracted.
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     Map<String, Object> map = new HashMap<String, Object>();
                     map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
-                    System.out.println(map);
                     String filepath = (String) map.get("path");
                     Double offset = (Double) map.get("offset");
                     String data = (String) map.get("data");
-                    System.out.println((root_dir+filepath) + " - This is the filepath");
+
+                    // NullPointerException check with the data field in the hashmap.
                     if (data == null) {
-                        System.out.println("NullPointerException Argument");
                         returnCode = 404;
                         respText.put("exception_type", "NullPointerException");
                         respText.put("exception_info", "NullPointerException: Data invalid.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
+
+                    // If the filepath is null, the API states that we must pass IllegalArgumentException
                     if (filepath.equals("") || filepath == null || filepath.equals("null")) {
-                        System.out.println("Illegal Argument");
                         returnCode = 404;
                         respText.put("exception_type", "IllegalArgumentException");
                         respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
+
+                    // Negative values for offset must raise IndexOutOfBoundsException.
                     if (offset.intValue() < 0) {
-                        System.out.println("Index out of Bound");
                         returnCode = 404;
                         respText.put("exception_type", "IndexOutOfBoundsException");
                         respText.put("exception_info", "IndexOutOfBoundsException: Offset/Length Index is negative/out of bounds.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
+
+                    // Code to verify if the path is a file and exists. If not then
+                    // API tells us to return FileNotFoundException.
                     String path = root_dir + filepath;
                     File f = new File(path);
                     if (!f.exists() || f.isDirectory()) {
-                        System.out.println("This does not exist" + !f.exists() + " /This is a directory "+ f.isDirectory());
                         returnCode = 404;
                         respText.put("exception_type", "FileNotFoundException");
                         respText.put("exception_info", "FileNotFoundException: File/path not found.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
                     FileOutputStream ostream = null;
                     ostream = new FileOutputStream(f, true);
-                    System.out.println("Write data properly");
-                    // TESTING
-                    System.out.println("Before Writing");
-                    FileReader fr = new FileReader(path);
-                    int i;
-                    while ((i=fr.read()) != -1)
-                        System.out.print((char) i);
-                    // TESTING ENDS
 
-                    System.out.println("\nData Length is "+data.length());
-                    System.out.println("Offset value is "+offset.intValue());
-                    System.out.println("File Length is "+f.length());
-                    System.out.println("Data length is " + Base64.getDecoder().decode(data).length);
-                    int newOffset = offset.intValue();
-                    if (offset.intValue() > f.length())
-                    {
-                        if (f.length() == 0)
-                            newOffset = 0;
-                        else
-                            newOffset = toIntExact(f.length()) + 1;
-                        System.out.println("New Offset value is "+newOffset);
-                    }
-//                        Base64.getEncoder().decode(data.getBytes());
-//                        RandomAccessFile seek = new RandomAccessFile(path, "rw");
-//                    Paths p = Paths.get(path);
+                    // Moving to the position of the offset before writing.
                     RandomAccessFile aFile = new RandomAccessFile(path, "rw");
-//                    FileChannel fchannel = FileChannel.open(p);
-//                    FileChannel fchannel = ostream.getChannel();
                     FileChannel fchannel = aFile.getChannel();
                     ByteBuffer bb = ByteBuffer.wrap(Base64.getDecoder().decode(data));
                     fchannel.position(offset.intValue());
                     fchannel.write(bb);
-
-                    // TESTING
-                    System.out.println("\nAfter Writing");
-                    FileReader fro = new FileReader(path);
-                    int j;
-                    while ((j=fro.read()) != -1)
-                        System.out.print((char) j);
-                    // TESTING ENDS
                     respText.put("success", "true");
-                    System.out.println(' ');
-                    System.out.println(respText);
                     ostream.close();
                     fchannel.close();
                 } catch (Exception e) {
                     e.printStackTrace();
-                    System.out.println("Illegal Argument");
                     returnCode = 404;
                     respText.put("exception_type", "IllegalArgumentException");
                     respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
                 }
+
+                // Comes here if no other exception is raised.
                 returnCode = 200;
                 jsonString = gson.toJson(respText);
-                System.out.println("---");
-                System.out.println(jsonString);
             } else {
                 returnCode = 404;
             }
@@ -526,12 +459,11 @@ public class StorageServer
         }));
     }
 
-    /** Throws <code>UnsupportedOperationException</code>. */
+    /** Creates a File/Directory on the path that is given. */
     public void create()
     {
         this.command_skeleton.createContext("/storage_create", (exchange ->
         {
-            System.out.println("Coming into storage_create Context");
             HashMap<String, String> respText = new HashMap<String, String>();
             String jsonString = "";
             int returnCode = 200;
@@ -539,21 +471,19 @@ public class StorageServer
                 // parse request json
                 try
                 {
-                    System.out.println("Coming into POST portion");
+                    // Reading the HTTP Exchange into a hashmap from which individual values can
+                    // be extracted.
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     Map<String, Object> map = new HashMap<String, Object>();
                     map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
-                    System.out.println(map);
                     String filepath = (String) map.get("path");
-                    System.out.println((root_dir+filepath) + " - This is the filepath");
+
+                    // If the filepath is null, the API states that we must pass IllegalArgumentException
                     if (filepath.equals("") || filepath == null || filepath.equals("null")) {
-                        System.out.println("Illegal Argument");
                         returnCode = 404;
                         respText.put("exception_type", "IllegalArgumentException");
                         respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
@@ -563,14 +493,14 @@ public class StorageServer
                     String fil = temp.getName();
                     boolean flagdir = new File(dir).mkdirs();
                     boolean flag = new File(path).createNewFile();
+
+                    // File creation will lead to a True value of the flag.
                     if (flag)
                         respText.put("success", "true");
                     else
                         respText.put("success", "false");
-                    System.out.println(respText);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    System.out.println("Illegal Argument");
                     returnCode = 404;
                     respText.put("exception_type", "IllegalArgumentException");
                     respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
@@ -578,10 +508,10 @@ public class StorageServer
                     this.generateResponseAndClose(exchange, jsonString, returnCode);
                     return;
                 }
+
+                // Comes here if no other exception.
                 returnCode = 200;
                 jsonString = gson.toJson(respText);
-                System.out.println("---");
-                System.out.println(jsonString);
             } else {
                 returnCode = 404;
             }
@@ -590,6 +520,7 @@ public class StorageServer
     }
 
 
+    /** Function to remove the files in the directory and then the directory */
     public boolean deleteDir(File file) {
         File[] contents = file.listFiles();
         if (contents != null) {
@@ -602,12 +533,11 @@ public class StorageServer
         return file.delete();
     }
 
-    /** Throws <code>UnsupportedOperationException</code>. */
+    /** To carry out the deletion of files on the Storage Server */
     public void delete()
     {
         this.command_skeleton.createContext("/storage_delete", (exchange ->
         {
-            System.out.println("Coming into storage_delete Context");
             HashMap<String, String> respText = new HashMap<String, String>();
             String jsonString = "";
             int returnCode = 200;
@@ -615,52 +545,49 @@ public class StorageServer
                 // parse request json
                 try
                 {
-                    System.out.println("Coming into POST portion");
+                    // Reading the HTTP Exchange into a hashmap from which individual values can
+                    // be extracted.
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     Map<String, Object> map = new HashMap<String, Object>();
                     map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
-                    System.out.println(map);
                     String filepath = (String) map.get("path");
-                    System.out.println((root_dir+filepath) + " - This is the filepath");
+
+                    // If the filepath is null, the API states that we must pass IllegalArgumentException
                     if (filepath.equals("") || filepath == null || filepath.equals("null") || filepath.equals(root_dir) || filepath.equals("/")) {
-                        System.out.println("Illegal Argument");
                         returnCode = 404;
                         respText.put("exception_type", "IllegalArgumentException");
                         respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
+
+                    // File to delete is taken and if it is a directory, you first delete all the files in the
+                    // directory before deleting the directory.
                     File delete_files = new File(root_dir + filepath);
                     boolean flag;
                     if (delete_files.isDirectory())
                     {
                         flag = deleteDir(delete_files);
                     } else {
-                        System.out.println(delete_files);
                         flag = delete_files.delete();
-                        System.out.println(flag);
                         String dir = delete_files.getParent();
                         File dirfile = new File(dir);
                         while (dirfile.list().length == 0)
                         {
-                            System.out.println(dirfile);
                             flag = dirfile.delete();
-                            System.out.println(flag);
                             String d = dirfile.getParent();
                             dirfile = new File(d);
                         }
                     }
+
+                    // If the delete function returns true, then the success is true.
                     if (flag)
                         respText.put("success", "true");
                     else
                         respText.put("success", "false");
-                    System.out.println(respText);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    System.out.println("Illegal Argument");
                     returnCode = 404;
                     respText.put("exception_type", "IllegalArgumentException");
                     respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
@@ -668,10 +595,10 @@ public class StorageServer
                     this.generateResponseAndClose(exchange, jsonString, returnCode);
                     return;
                 }
+
+                // Comes here if no other exception.
                 returnCode = 200;
                 jsonString = gson.toJson(respText);
-                System.out.println("---");
-                System.out.println(jsonString);
             } else {
                 returnCode = 404;
             }
@@ -679,12 +606,11 @@ public class StorageServer
         }));
     }
 
-    /** Throws <code>UnsupportedOperationException</code>. */
+    /** Function to carry out the replication amongst multiple servers */
     public void copy()
     {
         this.command_skeleton.createContext("/storage_copy", (exchange ->
         {
-            System.out.println("====================Coming into storage_copy Context==================");
             HashMap<String, String> respText = new HashMap<String, String>();
             String jsonString = "";
             int returnCode = 200;
@@ -692,36 +618,36 @@ public class StorageServer
                 // parse request json
                 try
                 {
-                    System.out.println("Coming into POST portion");
+                    // Reading the HTTP Exchange into a hashmap from which individual values can
+                    // be extracted.
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     Map<String, Object> map = new HashMap<String, Object>();
                     map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
-                    System.out.println(map);
                     String filepath = (String) map.get("path");
                     String serverIp = (String) map.get("server_ip");
+
+                    // Replacing localhost with the value of the IP address
                     if (serverIp.equals("localhost"))
                     {
                         serverIp = "127.0.0.1";
                     }
                     Double serverPort = (Double) map.get("server_port");
-                    System.out.println((serverIp) + " - This is the IP");
-                    System.out.println((serverPort) + " - This is the Port");
-                    System.out.println((root_dir+filepath) + " - This is the filepath");
+
+                    // Reading the HTTP Exchange into a hashmap from which individual values can
+                    // be extracted.
                     if (filepath.equals("") || filepath == null || filepath.equals("null") || filepath.equals(root_dir) || filepath.equals("/")) {
-                        System.out.println("Illegal Argument");
                         returnCode = 404;
                         respText.put("exception_type", "IllegalArgumentException");
                         respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
 
+                    // With the given path, first find the number of characters you need to read. That is nothing
+                    // but the size of the file which needs to be read. This can be got using the Storage_API.
                     Map<String, Object> sendText = new HashMap<String, Object>();
                     sendText.put("path", filepath);
-                    System.out.println(sendText);
                     HttpClient client = HttpClient.newHttpClient();
 
                     HttpRequest request = HttpRequest.newBuilder()
@@ -729,7 +655,6 @@ public class StorageServer
                             .setHeader("Content-Type", "application/json")
                             .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(sendText)))
                             .build();
-                    System.out.println(request);
                     HttpResponse<String> response;
                     try
                     {
@@ -742,24 +667,22 @@ public class StorageServer
                     if (response.statusCode() != 200)
                     {
                         returnCode = 404;
-                        System.out.println("---");
-                        System.out.println(response.body());
                         this.generateResponseAndClose(exchange, response.body(), returnCode);
                         return;
                     } else {
-                        System.out.println("2@2@");
+
+                        // If the values don't return any exception, then we can go ahead and read the data from the
+                        // file using the storage_read API. Here we want to read the entire file which is why we keep
+                        // the offset as 0.0 and the length = size of the file.
                         sendText.put("offset", 0.0);
                         Map<String, String> temp = new HashMap<String,String>();
                         temp = (Map<String, String>) gson.fromJson(response.body(), temp.getClass());
-                        System.out.println(temp.get("size").getClass());
                         sendText.put("length", new Double(temp.get("size")));
-                        System.out.println(sendText);
                         HttpRequest request2 = HttpRequest.newBuilder()
                                 .uri(URI.create("http://"+serverIp+":" + serverPort.intValue() + "/storage_read"))
                                 .setHeader("Content-Type", "application/json")
                                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(sendText)))
                                 .build();
-                        System.out.println(request2);
                         HttpResponse<String> response2;
                         try
                         {
@@ -769,16 +692,15 @@ public class StorageServer
                         {
                             throw new TestFailed("unable to send request to naming server", t);
                         }
-                        System.out.println(response2);
-                        System.out.println(response2.body());
 
-                        // Reading done. Now writing.
+                        // With the response from reading having the data which needs to be written to the file,
+                        // we go ahead and write using the FileOutputStream object. We cannot use the getStorage API
+                        // because we need to write locally. So we create a new file (and a new directory, if the
+                        // directory is not present) and then go ahead and write.
                         Map<String, Object> tempread = new HashMap<String,Object>();
                         tempread = (Map<String, Object>) gson.fromJson(response2.body(), tempread.getClass());
-                        System.out.println("Temp Read is " + tempread);
                         byte[] byte_data_write = Base64.getDecoder().decode((String) tempread.get("data"));
                         String decodedString = new String(byte_data_write);
-                        System.out.println("Data is " + decodedString);
                         File newFile = new File(root_dir+filepath);
                         String newDirectory = newFile.getParent();
                         if (!new File(newDirectory).exists())
@@ -796,26 +718,12 @@ public class StorageServer
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-//                        RandomAccessFile aFile = new RandomAccessFile((root_dir+filepath), "rw");
-//                        FileChannel fchannel = aFile.getChannel();
-//                        ByteBuffer bb = ByteBuffer.wrap(byte_data_write);
-//                        fchannel.position(0);
-//                        fchannel.write(bb);
 
-
-                        // TESTING
-                        System.out.println("\nAfter Writing");
-                        FileReader fro = new FileReader((root_dir+filepath));
-                        int j;
-                        while ((j=fro.read()) != -1)
-                            System.out.print((char) j);
-                        // TESTING ENDS
                         respText.put("success", "true");
-                        System.out.println("====================Getting out of storage_copy Context==================");
+
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    System.out.println("IOException");
                     returnCode = 404;
                     respText.put("exception_type", "IOException");
                     respText.put("exception_info", "IOException: File/path IO not valid.");
@@ -825,8 +733,6 @@ public class StorageServer
                 }
                 returnCode = 200;
                 jsonString = gson.toJson(respText);
-                System.out.println("---");
-                System.out.println(jsonString);
             } else {
                 returnCode = 404;
             }
