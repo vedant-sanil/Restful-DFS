@@ -186,7 +186,6 @@ public class NamingServer
     public void listDirs() {
         this.service_skeleton.createContext("/list", (exchange ->
         {
-            System.out.println("List Files!");
             String jsonString = "";
             int returnCode = 0;
             if ("POST".equals(exchange.getRequestMethod())) {
@@ -207,8 +206,6 @@ public class NamingServer
                     Path filePath = new Path(filepath);
                     String compressedPath = filePath.toString().replaceAll("/+","/");
                     String[] filelist = compressedPath.substring(1).split("/");
-                    System.out.println("--------------------------");
-                    System.out.println("Directory to be listed : " + filePath);
 
                     if (filepath.equals("/")) {
                         // Root directory being sent
@@ -284,8 +281,6 @@ public class NamingServer
                     Path filePath = new Path(filepath);
                     String compressedPath = filePath.toString().replaceAll("/+","/");
                     String[] filelist = compressedPath.substring(1).split("/");
-                    System.out.println("--------------------------");
-                    System.out.println("File to be checked : " + filePath);
 
                     // Return root dir as true
                     if (filepath.equals("/")) {
@@ -311,7 +306,6 @@ public class NamingServer
                             jsonString = gson.toJson(booleanReturn);
                         }
                     } else {
-                        System.out.println("File not found!");
                         throw new FileNotFoundException("File Not Found!");
                     }
                 } catch (IllegalArgumentException e) {
@@ -389,7 +383,6 @@ public class NamingServer
                             booleanReturn = new BooleanReturn(success);
                             jsonString = gson.toJson(booleanReturn);
                         } else {
-                            System.out.println(parentList.length);
                             throw new FileNotFoundException("Directory Not Found!");
                         }
                     }
@@ -585,19 +578,16 @@ public class NamingServer
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     Map<String, String> map = new HashMap<String, String>();
                     map = (Map<String, String>) gson.fromJson(isr, map.getClass());
-                    System.out.println(map);
                     String filepath = map.get("path");
                     if (filepath.equals("") || !filepath.startsWith("/") || !filepath.contains(":")) {
                         returnCode = 200;
                         respText.put("success", "false");
                         jsonString = gson.toJson(respText);
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     } else {
                         respText.put("success", "true");
                         jsonString = gson.toJson(respText);
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
@@ -657,12 +647,10 @@ public class NamingServer
                                     for (StorageServerInfo s : regServers) {
                                         for (String filename : s.getFiles()) {
                                             if (filename.equals(filepath)) {
-                                                System.out.println(s.getClient_port() + " : filename is : " + filename);
                                                 server_ip = s.getStorage_ip();
                                                 server_port = s.getCommand_port();
                                                 try {
                                                     response = this.getResponse("/storage_delete", server_port, filePath);
-                                                    System.out.println(response);
                                                 } catch (Exception e) {
                                                     e.printStackTrace();
                                                 }
@@ -677,7 +665,6 @@ public class NamingServer
                                                 server_port = s.getCommand_port();
                                                 try {
                                                     response = this.getResponse("/storage_delete", server_port, filePath);
-                                                    System.out.println(response);
                                                 } catch (Exception e) {
                                                     e.printStackTrace();
                                                 }
@@ -744,7 +731,6 @@ public class NamingServer
         PrintStream stream = new PrintStream(file);
         System.setOut(stream);
         System.setErr(stream);
-        System.out.println("MAIN METHOD CALLED");
         NamingServer n = new NamingServer(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
         n.start();
     }
@@ -799,7 +785,6 @@ public class NamingServer
                     }
                     this.rootdir.lock.getReadLock(n, regServers, (String) map.get("path"), false);
                     boolean flag_lock = this.directree.addLock(this.rootdir, filelist, exclusive, n, regServers, (String) map.get("path"));
-                    System.out.println(flag_lock);
                     if (flag_lock) {
                         jsonString = "";
                         returnCode = 200;
@@ -868,7 +853,6 @@ public class NamingServer
                     }
                     this.rootdir.lock.releaseReadLock();
                     boolean flag_lock = this.directree.releaseLock(this.rootdir, filelist, exclusive);
-                    System.out.println(flag_lock);
                     if (flag_lock) {
                         jsonString = "";
                         returnCode = 200;
@@ -974,7 +958,6 @@ public class NamingServer
                 .setHeader("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestObj)))
                 .build();
-        System.out.println("HTTP Request is "+request);
         response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         return response;
     }
