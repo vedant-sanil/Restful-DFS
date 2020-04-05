@@ -266,7 +266,6 @@ public class NamingServer
     public void isDirectory() {
         this.service_skeleton.createContext("/is_directory", (exchange ->
         {
-            System.out.println("Is directory?");
             String jsonString = "";
             int returnCode = 0;
 
@@ -300,14 +299,12 @@ public class NamingServer
                     if (this.directree.fileExists(this.rootdir, filelist) || this.directree.dirExists(this.rootdir, filelist)) {
                         // Check if file or directory exists
                         if (this.directree.isDirectoryStatus()) {
-                            System.out.println("Is a directory!");
                             boolean success = true;
                             returnCode = 200;
                             BooleanReturn booleanReturn = new BooleanReturn(success);
                             jsonString = gson.toJson(booleanReturn);
                         }
                         if (this.directree.isFileStatus()) {
-                            System.out.println("Is not a directory!");
                             boolean success = false;
                             returnCode = 200;
                             BooleanReturn booleanReturn = new BooleanReturn(success);
@@ -344,7 +341,6 @@ public class NamingServer
     private void createDirectory() {
         this.service_skeleton.createContext("/create_directory", (exchange ->
         {
-            System.out.println("Create directory!");
             String jsonString = "";
             int returnCode = 0;
             boolean success = false;
@@ -365,13 +361,10 @@ public class NamingServer
                     Path filePath = new Path(filepath);
                     String[] filelist = filePath.toString().substring(1).split("/");
                     if (filelist.length == 1) {
-                        //parentList = Arrays.copyOfRange(filelist,0,filelist.length);
                         parentList = new String[] {"/"};
                     } else {
                         parentList = Arrays.copyOfRange(filelist, 0, filelist.length - 1);
                     }
-                    System.out.println("--------------------------");
-                    System.out.println("File to be checked : " + filePath);
 
                     if (filepath.equals("/")) {
                         success = false;
@@ -380,17 +373,15 @@ public class NamingServer
                         jsonString = gson.toJson(booleanReturn);
                     } else {
                         if (this.directree.dirExists(this.rootdir, parentList)) {
-                            System.out.println("Parent Dir exists");
                             // Parent directory exists
                             if (this.directree.dirExists(this.rootdir, filelist)) {
                                 // Path provided is a directory
-                                System.out.println("Dir exists");
                                 success = false;
                             } else if (this.directree.fileExists(this.rootdir, filelist)) {
-                                System.out.println("File exists");
+                                // Path provided is a file
                                 success = false;
                             } else {
-                                System.out.println("WE ARE CREATING A DIRECTORY!");
+                                // Add the directory
                                 success = true;
                                 this.directree.addDirectory(this.rootdir, filelist);
                             }
@@ -429,7 +420,6 @@ public class NamingServer
     private void createFile() {
         this.service_skeleton.createContext("/create_file", (exchange ->
         {
-            System.out.println("Create file!");
             String jsonString = "";
             int returnCode = 0;
             boolean success = false;
@@ -455,8 +445,6 @@ public class NamingServer
                     } else {
                         parentList = Arrays.copyOfRange(filelist, 0, filelist.length - 1);
                     }
-                    System.out.println("--------------------------");
-                    System.out.println("File to be checked : " + filePath);
 
                     if (filepath.equals("/")) {
                         success = false;
@@ -465,17 +453,13 @@ public class NamingServer
                         jsonString = gson.toJson(booleanReturn);
                     } else {
                         if (this.directree.dirExists(this.rootdir, parentList)) {
-                            System.out.println("Parent Dir exists");
                             // Parent directory exists
                             if (this.directree.fileExists(this.rootdir, filelist)) {
-                                // Path provided is a directory
-                                System.out.println("File exists");
+                                // Path provided is a file
                                 success = false;
                             } else if (this.directree.dirExists(this.rootdir, filelist)) {
-                                System.out.println("Dir exists");
                                 success = false;
                             } else {
-                                System.out.println("WE ARE CREATING A FILE!");
                                 success = true;
                                 this.directree.addElement(this.rootdir, filelist);
 
@@ -521,7 +505,6 @@ public class NamingServer
     private void getStorage() {
         this.service_skeleton.createContext("/getstorage", (exchange ->
         {
-            System.out.println("Storage check!");
             String jsonString = "";
             int returnCode = 200;
             if ("POST".equals(exchange.getRequestMethod())) {
@@ -539,19 +522,15 @@ public class NamingServer
 
                     Path filePath = new Path(filepath);
                     String[] filelist = filePath.toString().substring(1).split("/");
-                    System.out.println("--------------------------");
-                    System.out.println("File to be checked : " + filePath);
 
                     // Check if files exist in directory and generate appropriate response
                     if (this.directree.fileExists(this.rootdir, filelist)) {
-                        System.out.println("EXISTS! + " + this.regServers.size());
                         returnCode = 200;
 
                         // Loop through servers to check which server file exists in
                         serverloop:
                         for (StorageServerInfo s : this.regServers) {
                             for (String filename : s.getFiles()) {
-                                System.out.println(s.getClient_port() + " : filename is : " + filename);
                                 if (filename.equals(filepath)) {
                                     server_ip = s.getStorage_ip();
                                     server_port = s.getClient_port();
@@ -564,7 +543,6 @@ public class NamingServer
                             throw new IllegalArgumentException("Illegal Argument within existing file!");
                         }
 
-                        System.out.println("Server IP: " + server_ip + " server port : " + server_port);
                         ServerInfo serverInfo = new ServerInfo(server_ip, server_port);
                         jsonString = gson.toJson(serverInfo);
                     } else {
@@ -609,20 +587,16 @@ public class NamingServer
                     map = (Map<String, String>) gson.fromJson(isr, map.getClass());
                     System.out.println(map);
                     String filepath = map.get("path");
-                    System.out.println(filepath + " - This is the filepath");
                     if (filepath.equals("") || !filepath.startsWith("/") || !filepath.contains(":")) {
-                        System.out.println("Illegal Argument");
                         returnCode = 200;
                         respText.put("success", "false");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
                         System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     } else {
                         respText.put("success", "true");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
                         System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
@@ -645,7 +619,6 @@ public class NamingServer
     public void delete() {
         this.service_skeleton.createContext("/delete", (exchange ->
         {
-            System.out.println("Delete Directory!");
             String jsonString = "";
             int returnCode = 0;
             if ("POST".equals(exchange.getRequestMethod())) {
@@ -666,8 +639,6 @@ public class NamingServer
                     String compressedPath = filePath.toString().replaceAll("/+","/");
                     String[] filelist = compressedPath.substring(1).split("/");
                     HttpResponse<String> response = null;
-                    System.out.println("--------------------------");
-                    System.out.println("Directory to be listed : " + filePath);
 
                     if (filepath.equals("/")) {
                         // Root directory being sent
@@ -677,7 +648,6 @@ public class NamingServer
                     } else {
                         if (this.directree.fileExists(this.rootdir, filelist) || this.directree.dirExists(this.rootdir, filelist)) {
                             DirectoryNode dir = this.directree.deleteFile(this.rootdir, filelist);
-                            System.out.println("Directory Node I have is - " + dir.getData());
                             if (dir != null)
                             {
                                 String server_ip = "";
@@ -686,12 +656,10 @@ public class NamingServer
                                 {
                                     for (StorageServerInfo s : regServers) {
                                         for (String filename : s.getFiles()) {
-                                            System.out.println("filename is - "+filename+" , filepath is - "+filepath);
                                             if (filename.equals(filepath)) {
                                                 System.out.println(s.getClient_port() + " : filename is : " + filename);
                                                 server_ip = s.getStorage_ip();
                                                 server_port = s.getCommand_port();
-                                                System.out.println("File Server IP: "+server_ip+" File Server Client Port: "+s.getClient_port());
                                                 try {
                                                     response = this.getResponse("/storage_delete", server_port, filePath);
                                                     System.out.println(response);
@@ -704,12 +672,9 @@ public class NamingServer
                                 } else {
                                     for (StorageServerInfo s : regServers) {
                                         for (String filename : s.getFiles()) {
-                                            System.out.println("DIRECTORY - filename is - " + filename + " , filepath is - " + filepath);
                                             if (filename.contains(filepath)) {
-                                                System.out.println(s.getClient_port() + " : filename is : " + filename);
                                                 server_ip = s.getStorage_ip();
                                                 server_port = s.getCommand_port();
-                                                System.out.println("File Server IP: " + server_ip + " File Server Client Port: " + s.getClient_port());
                                                 try {
                                                     response = this.getResponse("/storage_delete", server_port, filePath);
                                                     System.out.println(response);
@@ -723,15 +688,12 @@ public class NamingServer
                                 }
                                 try {
                                     if (!dir.lock.portmap.isEmpty()) {
-                                        System.out.println("Deletion of Replica " + dir.lock.portmap);
                                         Set<Integer> deletion_set = dir.lock.portmap.remove(filepath);
                                         Map<String, Object> req = new HashMap<String, Object>();
                                         req.put("path", filepath);
                                         if (!deletion_set.isEmpty()) {
                                             for (int i : deletion_set) {
                                                 response = this.getResponse("/storage_delete", deletion_set.stream().findFirst().get(), req);
-                                                System.out.println("Deletion - Response is " + response);
-                                                System.out.println(deletion_set);
                                             }
                                         }
                                     }
@@ -802,31 +764,23 @@ public class NamingServer
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     Map<String, Object> map = new HashMap<String, Object>();
                     map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
-                    System.out.println(map);
                     String filepath = (String) map.get("path");
-                    System.out.println(filepath + " - This is the filepath");
                     boolean exclusive = (boolean) map.get("exclusive");
-                    System.out.println(exclusive + " - This is the exclusive");
                     int n = rand.nextInt(40);
                     if (filepath.equals("") || filepath == null || filepath.equals("null")) {
-                        System.out.println("Illegal Argument");
                         returnCode = 404;
                         respText.put("exception_type", "IllegalArgumentException");
                         respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
                     if (filepath.equals("/")) {
                         if (exclusive) {
                             this.rootdir.lock.getWriteLock(n, regServers, filepath);
-                            System.out.println(filepath + "is given WriteLock");
                         }
                         else {
                             this.rootdir.lock.getReadLock(n, regServers, filepath, true);
-                            System.out.println(filepath + "is given ReadLock");
                         }
                         returnCode = 200;
                         jsonString = "";
@@ -835,8 +789,6 @@ public class NamingServer
                     }
                     Path filePath = new Path(filepath);
                     String[] filelist = filePath.toString().substring(1).split("/");
-                    System.out.println("--------------------------");
-                    System.out.println("File to be Locked : " + filePath);
                     if (!this.directree.fileExists(this.rootdir, filelist) && !this.directree.dirExists(this.rootdir, filelist)) {
                         returnCode = 404;
                         String exception_type = "FileNotFoundException";
@@ -874,32 +826,22 @@ public class NamingServer
         this.service_skeleton.createContext("/unlock", (exchange ->
         {
             HashMap<String, Object> respText = new HashMap<String, Object>();
-            System.out.println("HERE IS HERE");
             String jsonString = "";
             int returnCode = 200;
             if ("POST".equals(exchange.getRequestMethod())) {
                 RegisterRequest registerRequest = null;
                 try {
-                    System.out.println("========UNLOCK FUNCTION CALLED======");
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     Map<String, Object> map = new HashMap<String, Object>();
                     map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
-                    System.out.println(map);
                     String filepath = (String) map.get("path");
-                    System.out.println(filepath + " - This is the filepath");
                     boolean exclusive = (boolean) map.get("exclusive");
-//                    boolean exclusive_flag = false;
-//                    if (exclusive.equals("true"))5
-//                        exclusive_flag = true;
-                    System.out.println(exclusive + " - This is the exclusive");
                     if (filepath.equals("/")) {
                         if (exclusive) {
                             this.rootdir.lock.releaseWriteLock();
-                            System.out.println(filepath + " releases WriteLock");
                         }
                         else {
                             this.rootdir.lock.releaseReadLock();
-                            System.out.println(filepath + " releases ReadLock");
                         }
                         returnCode = 200;
                         jsonString = "";
@@ -907,28 +849,20 @@ public class NamingServer
                         return;
                     }
                     if (filepath.equals("") || filepath == null || filepath.equals("null")) {
-                        System.out.println("Illegal Argument");
                         returnCode = 404;
                         respText.put("exception_type", "IllegalArgumentException");
                         respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
                     Path filePath = new Path(filepath);
                     String[] filelist = filePath.toString().substring(1).split("/");
-                    System.out.println("--------------------------");
-                    System.out.println("File to be Locked : " + filePath);
                     if (!this.directree.fileExists(this.rootdir, filelist)  && !this.directree.dirExists(this.rootdir, filelist)) {
-                        System.out.println("Illegal Argument");
                         returnCode = 404;
                         respText.put("exception_type", "IllegalArgumentException");
                         respText.put("exception_info", "IllegalArgumentException: File/path invalid.");
                         jsonString = gson.toJson(respText);
-                        System.out.println("---");
-                        System.out.println(jsonString);
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
@@ -957,7 +891,6 @@ public class NamingServer
 
     private void register() {
         this.registration_skeleton.createContext("/register", (exchange -> {
-            //HashMap<String, Object> respText = new HashMap<String, Object>();
             String jsonString = "";
             int returnCode = 200;
             int command_port = 0;
@@ -979,12 +912,9 @@ public class NamingServer
                     command_port = registerRequest.command_port;
                     String[] files = registerRequest.files;
 
-                    System.out.println(command_port + " : " + registerRequest + " " + this.currServers.size());
-
                     /** Raise exception here if duplicate servers exist */
                     if (this.regServers.size() == 0) {
                         this.currServers.add(new StorageServerInfo(storage_ip, client_port, command_port, files));
-                        //System.out.println(command_port + " : " + registerRequest + " " + this.currServers.size());
                     } else {
                         for (int i=0; i < this.regServers.size(); i++) {
                             if (this.regServers.get(i).verifySameServer(storage_ip, command_port)) {
@@ -999,7 +929,6 @@ public class NamingServer
                     }
                     this.regServers = this.currServers;
                 } catch (Exception e) {
-                    System.out.println("Exception thrown (" + command_port + ") : " + e);
                     returnCode = 409;
                     String exception_type = "IllegalStateException";
                     String exception_info = "This storage client already registered.";
@@ -1013,27 +942,20 @@ public class NamingServer
                 for (String filename : registerRequest.files) {
                     Path filePath = new Path(filename);
                     String[] filelist = filePath.toString().substring(1).split("/");
-                    System.out.println("--------------------------");
-                    System.out.println("Files being sent in : " + filePath);
 
                     // Add new files to tree directory
                     this.directree.addElement(this.rootdir, filelist);
                     if (!this.directree.isUnique()) {
                         repeated_list.add(filename);
-                        //System.out.println("The repeated file dir is : " + filename);
                     }
-
-                    System.out.println("--------------------------");
                 }
 
-                //String[] replLists = repeated_list.toArray()<String>;
                 String[] replLists = new String[repeated_list.size()];
                 replLists = repeated_list.toArray(replLists);
 
                 FilesReturn filesReturn = new FilesReturn(replLists);
                 jsonString = gson.toJson(filesReturn);
                 returnCode = 200;
-                //System.out.println(respText);
             } else {
                 jsonString = "The REST method should be POST for <register>!\n";
                 returnCode = 400;
