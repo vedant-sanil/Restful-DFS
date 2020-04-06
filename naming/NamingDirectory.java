@@ -21,10 +21,7 @@ public class NamingDirectory {
         this.fileStatus = false;
     }
 
-    /** Traverse tree to add an element at parent directory
-     * @param : Parent node, array of pathnames of parent directory
-     * @output : Adds a file to the tree, return void
-    * */
+    /**  Add a file to a directory */
     public void addElement(DirectoryNode node, String[] pathName) {
         ArrayList<DirectoryNode> tempChild = new ArrayList<DirectoryNode>();
         // Remember, only one unique path per level
@@ -88,10 +85,7 @@ public class NamingDirectory {
         return;
     }
 
-    /** Traverse tree and delete file at the input path
-     * @param : Parent node, array of pathnames of file path
-     * @output : Returns the file deleted
-     * */
+    /** Traverse through tree and pass the file node to delete exists */
     public DirectoryNode deleteFile(DirectoryNode node, String[] pathName) {
         if (pathName[0].equals("/")) {
             return node;
@@ -143,10 +137,7 @@ public class NamingDirectory {
         }
     }
 
-    /** Traverse tree to check if directory exists
-     * @param : Parent node, array of pathnames of parent directory
-     * @output : True if file exists, else false
-     * */
+    /** Traverse through tree to check if file exists */
     public boolean fileExists(DirectoryNode node, String[] pathName) {
         if (pathName[0].equals("/")) {
             return true;
@@ -191,10 +182,7 @@ public class NamingDirectory {
     }
 
 
-    /** Traverse tree to check if directory exists
-     * @param : Parent node, array of pathnames split from the directory path
-     * @output : True if directory exists, else false
-     * */
+    /** Traverse directory to check if it exists */
     public boolean dirExists(DirectoryNode node, String[] pathName) {
         if (pathName[0].equals("/")) {
             return true;
@@ -239,10 +227,6 @@ public class NamingDirectory {
         }
     }
 
-    /** Obtain all files in a given directory
-     * @param : Parent node, array of pathnames of parent directory
-     * @output : List of all files within a parent directory
-     * */
     public ArrayList<String> getFiles(DirectoryNode node, String[] pathName) {
         ArrayList<String> tempFiles = new ArrayList<String>();
         if (pathName[0].equals("/")) {
@@ -284,10 +268,7 @@ public class NamingDirectory {
         return tempFiles;
     }
 
-    /** Add a directory to the tree
-     * @param : Parent node, array of pathnames of parent directory
-     * @output : Adds dir to tree, returns void
-     * */
+    /**  Add a directory */
     public void addDirectory(DirectoryNode node, String[] pathName) {
         ArrayList<DirectoryNode> tempChild = new ArrayList<DirectoryNode>();
         // Remember, only one unique path per level
@@ -349,10 +330,8 @@ public class NamingDirectory {
         return;
     }
 
-    /** TBC:SHARATH
-     * @param : Parent node, array of pathnames of parent directory
-     * @output : List of all files within a parent directory
-     * */
+    /**  Add a Lock. Exclusive determines whether it is shared or exclusive
+     * regServers help us to iterate through to find which server has what file. */
     public synchronized boolean addLock(DirectoryNode node, String[] pathName, boolean exclusive, int n, ArrayList<StorageServerInfo> regServers, String filepath) throws InterruptedException, IOException
     {
         ArrayList<DirectoryNode> tempChild = new ArrayList<DirectoryNode>();
@@ -386,10 +365,7 @@ public class NamingDirectory {
         return true;
     }
 
-    /** TBC:SHARATH
-     * @param : Parent node, array of pathnames of parent directory
-     * @output : List of all files within a parent directory
-     * */
+    /**  Release a Lock. Exclusive determines whether it is shared or exclusive */
     public synchronized boolean releaseLock(DirectoryNode node, String[] pathName, boolean exclusive) throws InterruptedException
     {
         ArrayList<DirectoryNode> tempChild = new ArrayList<DirectoryNode>();

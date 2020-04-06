@@ -29,8 +29,8 @@ public class DeletionTest extends NamingTest
     public static final String      notice =
         "checking naming server delete method";
     /** Prerequisites. */
-//    public static final Class[]     prerequisites =
-//        new Class[] {ReplicationTest.class};
+    public static final Class[]     prerequisites =
+        new Class[] {ReplicationTest.class};
 
     /** Storage server. */
     private DeletionStorageServer   server1;

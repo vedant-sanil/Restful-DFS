@@ -1,0 +1,200 @@
+javac -cp gson-2.8.6.jar */*.java */*/*.java
+# TODO: add command to compile your naming and storage server.
+# end
+java -cp ".:gson-2.8.6.jar" test.ConformanceTests
+checking path library public interface... ok
+checking naming server registration interface... ok
+checking naming server directory listing methods (list, isDirectory)... ok
+checking naming server creation methods (createFile, createDirectory)... ok
+checking naming server getStorage method... ok
+checking naming server lock sharing and exclusion... ok
+checking naming server lock queue fairness... ok
+checking naming server replication policy... ok
+checking naming server delete method... ok
+checking storage server registration process... ok
+checking storage server file access methods (size, read, write)... ok
+checking storage server file manipulation methods (create, delete)... ok
+checking storage server replication process... ok
+
+passed: 13       failed: 0       not run: 0
+score: 100.00/100
+javac -cp gson-2.8.6.jar */*.java */*/*.java
+# TODO: add command to compile your naming and storage server.
+# end
+java -cp ".:gson-2.8.6.jar" test.ConformanceTests
+checking path library public interface... ok
+checking naming server registration interface... ok
+checking naming server directory listing methods (list, isDirectory)... ok
+checking naming server creation methods (createFile, createDirectory)... ok
+checking naming server getStorage method... ok
+checking naming server lock sharing and exclusion... ok
+checking naming server lock queue fairness... ok
+checking naming server replication policy... ok
+checking naming server delete method... ok
+checking storage server registration process... ok
+checking storage server file access methods (size, read, write)... ok
+checking storage server file manipulation methods (create, delete)... ok
+checking storage server replication process... ok
+
+passed: 13       failed: 0       not run: 0
+score: 100.00/100
+javac -cp gson-2.8.6.jar */*.java */*/*.java
+# TODO: add command to compile your naming and storage server.
+# end
+java -cp ".:gson-2.8.6.jar" test.ConformanceTests
+checking path library public interface... ok
+checking naming server registration interface... ok
+checking naming server directory listing methods (list, isDirectory)... ok
+checking naming server creation methods (createFile, createDirectory)... ok
+checking naming server getStorage method... ok
+checking naming server lock sharing and exclusion... ok
+checking naming server lock queue fairness... ok
+checking naming server replication policy... ok
+checking naming server delete method... ok
+checking storage server registration process... ok
+checking storage server file access methods (size, read, write)... ok
+checking storage server file manipulation methods (create, delete)... ok
+checking storage server replication process... ok
+
+passed: 13       failed: 0       not run: 0
+score: 100.00/100
+javac -cp gson-2.8.6.jar */*.java */*/*.java
+# TODO: add command to compile your naming and storage server.
+# end
+java -cp ".:gson-2.8.6.jar" test.ConformanceTests
+checking path library public interface... ok
+checking naming server registration interface... ok
+checking naming server directory listing methods (list, isDirectory)... ok
+checking naming server creation methods (createFile, createDirectory)... ok
+checking naming server getStorage method... ok
+checking naming server lock sharing and exclusion... ok
+checking naming server lock queue fairness... ok
+checking naming server replication policy... ok
+checking naming server delete method... ok
+checking storage server registration process... ok
+checking storage server file access methods (size, read, write)... ok
+checking storage server file manipulation methods (create, delete)... ok
+checking storage server replication process... ok
+
+passed: 13       failed: 0       not run: 0
+score: 100.00/100
+javac -cp gson-2.8.6.jar */*.java */*/*.java
+# TODO: add command to compile your naming and storage server.
+# end
+java -cp ".:gson-2.8.6.jar" test.ConformanceTests
+checking path library public interface... ok
+checking naming server registration interface... ok
+checking naming server directory listing methods (list, isDirectory)... ok
+checking naming server creation methods (createFile, createDirectory)... ok
+checking naming server getStorage method... ok
+checking naming server lock sharing and exclusion... ok
+checking naming server lock queue fairness... ok
+checking naming server replication policy... ok
+checking naming server delete method... ok
+checking storage server registration process... ok
+checking storage server file access methods (size, read, write)... ok
+checking storage server file manipulation methods (create, delete)... ok
+checking storage server replication process... ok
+
+passed: 13       failed: 0       not run: 0
+score: 100.00/100
+javac -cp gson-2.8.6.jar */*.java */*/*.java
+# TODO: add command to compile your naming and storage server.
+# end
+java -cp ".:gson-2.8.6.jar" test.ConformanceTests
+checking path library public interface... ok
+checking naming server registration interface... ok
+checking naming server directory listing methods (list, isDirectory)... ok
+checking naming server creation methods (createFile, createDirectory)... ok
+checking naming server getStorage method... ok
+checking naming server lock sharing and exclusion... ok
+checking naming server lock queue fairness... ok
+checking naming server replication policy... ok
+checking naming server delete method... ok
+checking storage server registration process... ok
+checking storage server file access methods (size, read, write)... ok
+checking storage server file manipulation methods (create, delete)... ok
+checking storage server replication process... ok
+
+passed: 13       failed: 0       not run: 0
+score: 100.00/100
+javac -cp gson-2.8.6.jar */*.java */*/*.java
+# TODO: add command to compile your naming and storage server.
+# end
+java -cp ".:gson-2.8.6.jar" test.ConformanceTests
+checking path library public interface... ok
+checking naming server registration interface... ok
+checking naming server directory listing methods (list, isDirectory)... ok
+checking naming server creation methods (createFile, createDirectory)... ok
+checking naming server getStorage method... ok
+checking naming server lock sharing and exclusion... ok
+checking naming server lock queue fairness... ok
+checking naming server replication policy... ok
+checking naming server delete method... ok
+checking storage server registration process... ok
+checking storage server file access methods (size, read, write)... ok
+checking storage server file manipulation methods (create, delete)... ok
+checking storage server replication process... ok
+
+passed: 13       failed: 0       not run: 0
+score: 100.00/100
+javac -cp gson-2.8.6.jar */*.java */*/*.java
+# TODO: add command to compile your naming and storage server.
+# end
+java -cp ".:gson-2.8.6.jar" test.ConformanceTests
+checking path library public interface... ok
+checking naming server registration interface... ok
+checking naming server directory listing methods (list, isDirectory)... ok
+checking naming server creation methods (createFile, createDirectory)... ok
+checking naming server getStorage method... ok
+checking naming server lock sharing and exclusion... ok
+checking naming server lock queue fairness... ok
+checking naming server replication policy... ok
+checking naming server delete method... ok
+checking storage server registration process... ok
+checking storage server file access methods (size, read, write)... ok
+checking storage server file manipulation methods (create, delete)... ok
+checking storage server replication process... ok
+
+passed: 13       failed: 0       not run: 0
+score: 100.00/100
+javac -cp gson-2.8.6.jar */*.java */*/*.java
+# TODO: add command to compile your naming and storage server.
+# end
+java -cp ".:gson-2.8.6.jar" test.ConformanceTests
+checking path library public interface... ok
+checking naming server registration interface... ok
+checking naming server directory listing methods (list, isDirectory)... ok
+checking naming server creation methods (createFile, createDirectory)... ok
+checking naming server getStorage method... ok
+checking naming server lock sharing and exclusion... ok
+checking naming server lock queue fairness... ok
+checking naming server replication policy... ok
+checking naming server delete method... ok
+checking storage server registration process... ok
+checking storage server file access methods (size, read, write)... ok
+checking storage server file manipulation methods (create, delete)... ok
+checking storage server replication process... ok
+
+passed: 13       failed: 0       not run: 0
+score: 100.00/100
+javac -cp gson-2.8.6.jar */*.java */*/*.java
+# TODO: add command to compile your naming and storage server.
+# end
+java -cp ".:gson-2.8.6.jar" test.ConformanceTests
+checking path library public interface... ok
+checking naming server registration interface... ok
+checking naming server directory listing methods (list, isDirectory)... ok
+checking naming server creation methods (createFile, createDirectory)... ok
+checking naming server getStorage method... ok
+checking naming server lock sharing and exclusion... ok
+checking naming server lock queue fairness... ok
+checking naming server replication policy... ok
+checking naming server delete method... ok
+checking storage server registration process... ok
+checking storage server file access methods (size, read, write)... ok
+checking storage server file manipulation methods (create, delete)... ok
+checking storage server replication process... ok
+
+passed: 13       failed: 0       not run: 0
+score: 100.00/100

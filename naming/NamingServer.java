@@ -640,12 +640,15 @@ public class NamingServer
                             DirectoryNode dir = this.directree.deleteFile(this.rootdir, filelist);
                             if (dir != null)
                             {
+
+                                // This set of code is to find place where the original copy exists.
                                 String server_ip = "";
                                 int server_port = 0;
                                 if (dir.isFile == true)
                                 {
                                     for (StorageServerInfo s : regServers) {
                                         for (String filename : s.getFiles()) {
+                                            // If the Path is a file, then we need equals.
                                             if (filename.equals(filepath)) {
                                                 server_ip = s.getStorage_ip();
                                                 server_port = s.getCommand_port();
@@ -660,6 +663,8 @@ public class NamingServer
                                 } else {
                                     for (StorageServerInfo s : regServers) {
                                         for (String filename : s.getFiles()) {
+                                            // Since file is directory, we just need to match the directory part of the
+                                            // file and break the minute a first match is found.
                                             if (filename.contains(filepath)) {
                                                 server_ip = s.getStorage_ip();
                                                 server_port = s.getCommand_port();
@@ -673,6 +678,8 @@ public class NamingServer
                                         }
                                     }
                                 }
+
+                                // This code is to find places of replica and delete the replicas along with original.
                                 try {
                                     if (!dir.lock.portmap.isEmpty()) {
                                         Set<Integer> deletion_set = dir.lock.portmap.remove(filepath);
@@ -726,16 +733,11 @@ public class NamingServer
 
     public static void main(String[] args) throws FileNotFoundException, IOException, TestFailed
     {
-        Random rand = new Random();
-        File file = new File("./NamingServer" + rand.nextInt() + ".output");
-        PrintStream stream = new PrintStream(file);
-        System.setOut(stream);
-        System.setErr(stream);
         NamingServer n = new NamingServer(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
         n.start();
     }
 
-
+    /** Lock API */
     public void lock()
     {
         this.service_skeleton.createContext("/lock", (exchange ->
@@ -747,12 +749,16 @@ public class NamingServer
             if ("POST".equals(exchange.getRequestMethod())) {
                 RegisterRequest registerRequest = null;
                 try {
+
+                    // Extract the path and the exclusivity from the response.
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     Map<String, Object> map = new HashMap<String, Object>();
                     map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
                     String filepath = (String) map.get("path");
                     boolean exclusive = (boolean) map.get("exclusive");
                     int n = rand.nextInt(40);
+
+                    // Path is Null
                     if (filepath.equals("") || filepath == null || filepath.equals("null")) {
                         returnCode = 404;
                         respText.put("exception_type", "IllegalArgumentException");
@@ -761,6 +767,8 @@ public class NamingServer
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
+
+                    // Path is root
                     if (filepath.equals("/")) {
                         if (exclusive) {
                             this.rootdir.lock.getWriteLock(n, regServers, filepath);
@@ -773,6 +781,8 @@ public class NamingServer
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
+
+                    // Path is not found
                     Path filePath = new Path(filepath);
                     String[] filelist = filePath.toString().substring(1).split("/");
                     if (!this.directree.fileExists(this.rootdir, filelist) && !this.directree.dirExists(this.rootdir, filelist)) {
@@ -783,6 +793,8 @@ public class NamingServer
                         this.generateResponseAndClose(exchange, gson.toJson(exceptionReturn), returnCode);
                         return;
                     }
+
+                    // Else lock directory for Shared access and iterate through to lock appropriately
                     this.rootdir.lock.getReadLock(n, regServers, (String) map.get("path"), false);
                     boolean flag_lock = this.directree.addLock(this.rootdir, filelist, exclusive, n, regServers, (String) map.get("path"));
                     if (flag_lock) {
@@ -806,6 +818,7 @@ public class NamingServer
     }
 
 
+    /** Unlock API */
     public void unlock()
     {
         this.service_skeleton.createContext("/unlock", (exchange ->
@@ -816,11 +829,15 @@ public class NamingServer
             if ("POST".equals(exchange.getRequestMethod())) {
                 RegisterRequest registerRequest = null;
                 try {
+
+                    // Extract the path and the exclusivity from the response.
                     InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
                     Map<String, Object> map = new HashMap<String, Object>();
                     map = (Map<String, Object>) gson.fromJson(isr, map.getClass());
                     String filepath = (String) map.get("path");
                     boolean exclusive = (boolean) map.get("exclusive");
+
+                    // If the filepath is root, then deal with locks directly.
                     if (filepath.equals("/")) {
                         if (exclusive) {
                             this.rootdir.lock.releaseWriteLock();
@@ -833,6 +850,8 @@ public class NamingServer
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
+
+                    // Paths is Null
                     if (filepath.equals("") || filepath == null || filepath.equals("null")) {
                         returnCode = 404;
                         respText.put("exception_type", "IllegalArgumentException");
@@ -843,6 +862,8 @@ public class NamingServer
                     }
                     Path filePath = new Path(filepath);
                     String[] filelist = filePath.toString().substring(1).split("/");
+
+                    // Both Path and File don't exist
                     if (!this.directree.fileExists(this.rootdir, filelist)  && !this.directree.dirExists(this.rootdir, filelist)) {
                         returnCode = 404;
                         respText.put("exception_type", "IllegalArgumentException");
@@ -851,6 +872,8 @@ public class NamingServer
                         this.generateResponseAndClose(exchange, jsonString, returnCode);
                         return;
                     }
+
+                    // Else, you call the helper function to release the lock and return whether lock released or not.
                     this.rootdir.lock.releaseReadLock();
                     boolean flag_lock = this.directree.releaseLock(this.rootdir, filelist, exclusive);
                     if (flag_lock) {
@@ -873,6 +896,7 @@ public class NamingServer
         }));
     }
 
+    /** Function for registration of NameServer */
     private void register() {
         this.registration_skeleton.createContext("/register", (exchange -> {
             String jsonString = "";
